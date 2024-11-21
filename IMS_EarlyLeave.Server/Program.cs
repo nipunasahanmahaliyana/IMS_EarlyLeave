@@ -1,3 +1,4 @@
+using OfficeOpenXml;
 
 namespace IMS_EarlyLeave.Server
 {
@@ -5,9 +6,13 @@ namespace IMS_EarlyLeave.Server
     {
         public static void Main(string[] args)
         {
+            // Set the LicenseContext to NonCommercial
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+         
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

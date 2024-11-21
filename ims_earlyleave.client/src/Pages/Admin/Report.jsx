@@ -1,64 +1,81 @@
 import React, { useEffect, useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-import { gsap } from 'gsap';
+import axios from 'axios';
 
 const MonthlyReport = () => {
-    const [reports] = useState([
-        {
-            traineeName: 'John Doe',
-            leaveData: [2, 1, 0, 1, 3, 2, 0, 1, 2, 0, 1, 2],
-            detailedLeave: [
-                { month: 'January', days: 2 },
-                { month: 'February', days: 1 },
-                { month: 'March', days: 0 },
-                { month: 'April', days: 1 },
-                { month: 'May', days: 3 },
-                { month: 'June', days: 2 },
-                { month: 'July', days: 0 },
-                { month: 'August', days: 1 },
-                { month: 'September', days: 2 },
-                { month: 'October', days: 0 },
-                { month: 'November', days: 1 },
-                { month: 'December', days: 2 },
-            ]
-        },
-        {
-            traineeName: 'Jane Smith',
-            leaveData: [1, 0, 1, 2, 1, 0, 2, 1, 0, 1, 0, 1],
-            detailedLeave: [
-                { month: 'January', days: 1 },
-                { month: 'February', days: 0 },
-                { month: 'March', days: 1 },
-                { month: 'April', days: 2 },
-                { month: 'May', days: 1 },
-                { month: 'June', days: 0 },
-                { month: 'July', days: 2 },
-                { month: 'August', days: 1 },
-                { month: 'September', days: 0 },
-                { month: 'October', days: 1 },
-                { month: 'November', days: 0 },
-                { month: 'December', days: 1 },
-            ]
-        },
-        // Additional trainee reports can be added here
-    ]);
-
     const [searchTerm, setSearchTerm] = useState('');
-    gsap.from('.report-card', {
-        opacity: 0,
-        scale: 0.5,
-        stagger: 0.2,
-        duration: 0.5,
-        ease: "power2.in"
-    });
-    useEffect(() => {
-        
-    }, []);
+    const [leaves, setLeaves] = useState([]);
+    const [historyLeaves, setHistoryLeaves] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    // Filtered reports based on search term
-    const filteredReports = reports.filter(report =>
-        report.traineeName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Fetch leave data dynamically based on search term (trainee ID or name)
+    const getLeaveData = async (term) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`https://localhost:7247/Leaves?trainee_id=${term}`);
+            if (response.status === 200) {
+                console.log('Leave data retrieved successfully:', response.data);
+                setLeaves(response.data);
+            } else {
+                console.error('Error retrieving leave data:', response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching leave data:', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getHistoryLeaves = async (term) => {
+       
+        try {
+            setLoading(true);
+            const response = await axios.get(`https://localhost:7247/ApprovedRequests?trainee_id=${term}`);
+            if (response.status === 200) {
+                console.log('History data retrieved successfully:', response.data);
+                setHistoryLeaves(response.data);
+            } else {
+                console.error('Error retrieving leave history data:', response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching leave history data:', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch leave data when the search term changes
+    useEffect(() => {
+        if (searchTerm) {
+            getLeaveData(searchTerm);
+            getHistoryLeaves(searchTerm);
+        } else {
+            setLeaves([]); // Clear data if searchTerm is empty
+            setHistoryLeaves([]);
+        }
+    }, [searchTerm]);
+
+
+    const handleDownload = async () => {
+        try {
+            console.log(historyLeaves);
+            const response = await axios.post('https://localhost:7247/ExcelSheet', historyLeaves, {
+                headers: {
+                    'Content-Type': 'application/json' // Set the content type to application/json
+                },
+                responseType: 'blob' // Specify blob response type for file download
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'LeaveRequests.xlsx'); // Set the file name
+            document.body.appendChild(link);
+            link.click(); // Trigger download
+            document.body.removeChild(link); // Clean up
+        } catch (error) {
+            console.error('Error downloading the Excel sheet', error);
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-green-400 to-blue-500 p-8">
@@ -68,84 +85,54 @@ const MonthlyReport = () => {
             <div className="mb-8 w-full max-w-md">
                 <input
                     type="text"
-                    placeholder="Search by Trainee Name..."
+                    placeholder="Search by Trainee ID...."
                     className="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-400"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setLeaves([]); }}
                 />
-            </div> 
-
- 
+            </div>
 
             {/* Detailed Leave Records Table */}
             <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-screen-xl">
                 <h2 className="text-3xl font-bold mb-4 text-gray-800">Detailed Leave Records</h2>
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trainee Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leaves Taken</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredReports.map((report) => (
-                            report.detailedLeave.map((leave, index) => (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.traineeName}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{leave.month}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{leave.days}</td>
-                                </tr>
-                            ))
-                        ))}
-                    </tbody>
-                </table>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 w-full max-w-screen-xl">
-                {filteredReports.length > 0 ? (
-                    filteredReports.map((report, index) => (
-                        <div key={index} className="report-card bg-white rounded-lg shadow-lg p-6 transition duration-300 hover:shadow-xl transform hover:scale-105">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2">{report.traineeName}</h2>
-                            <Bar
-                                data={{
-                                    labels: [
-                                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                                    ],
-                                    datasets: [{
-                                        label: 'Leaves Taken',
-                                        data: report.leaveData,
-                                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                                        borderColor: 'rgba(75, 192, 192, 1)',
-                                        borderWidth: 1,
-                                    }]
-                                }}
-                                options={{
-                                    responsive: true,
-                                    maintainAspectRatio: true,
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            title: {
-                                                display: true,
-                                                text: 'Number of Leaves'
-                                            }
-                                        }
-                                    },
-                                    plugins: {
-                                        legend: {
-                                            display: true,
-                                            position: 'top',
-                                        }
-                                    }
-                                }}
-                                height={200}
-                            />
-                        </div>
-                    ))
+                {loading ? (
+                    <div className="text-center">Loading...</div>
                 ) : (
-                    <div className="text-white">No reports found for "{searchTerm}"</div>
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trainee ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leaves Taken</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {leaves.length > 0 ? (
+                                leaves.map((report, index) => (
+                                    <tr key={`${report.traineeID}-${report.month}-${index}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.traineeID}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.month}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{report.leaveBalance}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <button
+                                                onClick={handleDownload}
+                                                className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:from-blue-500 hover:to-green-400 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">
+                                                Download
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
+                                        No records found {searchTerm}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 )}
             </div>
         </div>

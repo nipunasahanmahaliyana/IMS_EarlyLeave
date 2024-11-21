@@ -11,6 +11,12 @@ using PdfSharpCore.Pdf;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Transactions;
 using static IMS_EarlyLeave.Server.Controllers.ELSController;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using OfficeOpenXml;
+using System.Data;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 
 
 namespace IMS_EarlyLeave.Server.Controllers
@@ -59,6 +65,74 @@ namespace IMS_EarlyLeave.Server.Controllers
             return Ok(users);
         }
 
+        [Route("/Userlogin")]
+        [HttpGet]
+        public IActionResult GetUserLog(string username)
+        {
+           
+            string query = "SELECT Log_in FROM Users WHERE Username = @user";
+            int login=-1;
+
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@user", username);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+
+                        if (reader.Read())
+                        {
+                            login = reader.GetInt32(0);
+                            
+                        }
+                        return Ok(login);
+                    }   
+                       
+                }
+            }
+            
+        }
+
+        [Route("/NumberOfSessions")]
+        [HttpGet]
+        public IActionResult GetSessions(string username)
+        {
+
+            string query = @"
+            SELECT COUNT(Log_in)
+            FROM Users 
+            INNER JOIN Assigned_Supervisor 
+                ON Users.Trainee_ID = Assigned_Supervisor.Trainee_ID
+            WHERE Assigned_Supervisor.Assigned_Supervisor_ID = @sup_id AND Log_in = 1";
+
+            int Count_login =-1;
+
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@sup_id", username);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+
+                        if (reader.Read())
+                        {
+                            Count_login = reader.GetInt32(0);
+
+                        }
+                        return Ok(Count_login);
+                    }
+
+                }
+            }
+
+        }
+
         [Route("/Requets")]
         [HttpGet]
         public IActionResult GetRequests()
@@ -102,40 +176,59 @@ namespace IMS_EarlyLeave.Server.Controllers
         {
             string query = "SELECT * FROM Request WHERE Trainee_ID = @Trainee_ID ORDER BY Id DESC";
             var requests = new List<Requests>();
-            int trainee_id = Trainee_ID;
 
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            try
             {
-                conn.Open();
-                using (SqlCommand comm = new SqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
-                    comm.Parameters.AddWithValue("@Trainee_ID", trainee_id);
-                    using (SqlDataReader reader = comm.ExecuteReader())
+                    conn.Open();
+
+                    using (SqlCommand comm = new SqlCommand(query, conn))
                     {
-                        while (reader.Read())
+                        comm.Parameters.AddWithValue("@Trainee_ID", Trainee_ID);
+
+                        using (SqlDataReader reader = comm.ExecuteReader())
                         {
-                            requests.Add(new Requests
+                            while (reader.Read())
                             {
-                                Id = reader["Id"] != DBNull.Value ? (int)reader["Id"] : 0,
-                                Trainee_ID = reader["Trainee_ID"] != DBNull.Value ? (int)reader["Trainee_ID"] : 0,
-                                Name = reader["Name"].ToString(),
-                                NIC = reader["NIC"].ToString(),
-                                Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
-                                Time = reader["Time"].ToString(),
-                                Reason = reader["Reason"].ToString(),
-                                Supervisor_ID = reader["Supervisor_ID"].ToString(),
-                                Leave_type = reader["Leave_type"].ToString(),
-                                Status = (int)reader["Status"],
-                                AcceptDateTime = reader["AcceptDateTime"] != DBNull.Value ? (DateTime)reader["AcceptDateTime"] : DateTime.MinValue
-                            });
+                                requests.Add(new Requests
+                                {
+                                    Id = reader["Id"] != DBNull.Value ? (int)reader["Id"] : 0,
+                                    Trainee_ID = reader["Trainee_ID"] != DBNull.Value ? (int)reader["Trainee_ID"] : 0,
+                                    Name = reader["Name"]?.ToString(),
+                                    NIC = reader["NIC"]?.ToString(),
+                                    Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
+                                    Time = reader["Time"]?.ToString(),
+                                    Reason = reader["Reason"]?.ToString(),
+                                    Supervisor_ID = reader["Supervisor_ID"]?.ToString(),
+                                    Leave_type = reader["Leave_type"]?.ToString(),
+                                    Status = (int)(reader["Status"] ?? 0),
+                                    AcceptDateTime = reader["AcceptDateTime"] != DBNull.Value ? (DateTime)reader["AcceptDateTime"] : DateTime.MinValue
+                                });
+                            }
                         }
-
                     }
-
                 }
+
+                if (requests.Count == 0)
+                {
+                    return NotFound(new { Message = "No requests found for the provided Trainee ID." });
+                }
+
+                return Ok(requests);
             }
-            return Ok(requests);
+            catch (SqlException sqlEx)
+            {
+                // Log the SQL exception (using a logging framework)
+                return StatusCode(500, new { Message = "Database error occurred.", Details = sqlEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log the general exception
+                return StatusCode(500, new { Message = "An unexpected error occurred.", Details = ex.Message });
+            }
         }
+
 
         [HttpPost]
         [Route("/AddRequest")]
@@ -212,24 +305,62 @@ namespace IMS_EarlyLeave.Server.Controllers
             return Ok();
         }
 
-        [HttpPost]
-        [Route("/AddUsers")]
-        public async Task<IActionResult> AddUsers(Users user, IFormFile image)
+        [HttpGet]
+        [Route("/TotalUsers")]
+        public IActionResult totalUsers()
         {
-            if (user == null || image == null)
+            string query = "SELECT COUNT(Trainee_ID) FROM Users";
+            int count = -1;
+            try
             {
-                return BadRequest(new { message = "Invalid user data or image." });
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand comm = new SqlCommand(query, conn))
+                    {
+                        using (SqlDataReader reader = comm.ExecuteReader())
+                        {
+
+                            if (reader.Read())
+                            {
+                                count = reader.GetInt32(0);
+                            }
+                        }
+                           
+                        return Ok(count);
+                    }
+                   
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Server error" });
             }
 
-            string _query = "SELECT * FROM Users WHERE Trainee_ID = @Trainee_ID";
-            string query = "INSERT INTO Users (Username, Password, Trainee_ID, NIC, Trainee_Name, IsActive, Image) " +
-                           "VALUES (@Username, @Password, @Trainee_ID, @NIC, @Trainee_Name, @IsActive, @Image)";
+        }
 
-            bool userExists = false;
+        [HttpPost]
+        [Route("/AddUsers")]
+        public async Task<IActionResult> AddUsers([FromForm] Users user, IFormFile image)
+        {
+            if (user == null)
+            {
+                return BadRequest(new { message = "Invalid user data." });
+            }
+
+            if (image == null)
+            {
+                return BadRequest(new { message = "Image is required." });
+            }
+
+            string selectQuery = "SELECT 1 FROM Users WHERE Trainee_ID = @Trainee_ID";
+            string insertQuery = @"INSERT INTO Users (Username, Password, Trainee_ID, NIC, Trainee_Name, IsActive, Image) 
+                           VALUES (@Username, @Password, @Trainee_ID, @NIC, @Trainee_Name, @IsActive, @Image)";
 
             try
             {
-                // Convert the uploaded file into a byte array
+                // Convert the uploaded image file into a byte array
                 byte[] avatarData;
                 using (var memoryStream = new MemoryStream())
                 {
@@ -242,30 +373,26 @@ namespace IMS_EarlyLeave.Server.Controllers
                     await conn.OpenAsync();
 
                     // Check if the user with the given Trainee_ID already exists
-                    using (SqlCommand checkUserCommand = new SqlCommand(_query, conn))
+                    using (SqlCommand checkUserCommand = new SqlCommand(selectQuery, conn))
                     {
                         checkUserCommand.Parameters.AddWithValue("@Trainee_ID", user.Trainee_ID);
 
-                        using (SqlDataReader reader = await checkUserCommand.ExecuteReaderAsync())
+                        var exists = await checkUserCommand.ExecuteScalarAsync();
+                        if (exists != null)
                         {
-                            userExists = reader.HasRows;
+                            return BadRequest(new { message = "User with the given Trainee ID already exists." });
                         }
                     }
 
-                    if (userExists)
+                    // Insert new user
+                    using (SqlCommand insertUserCommand = new SqlCommand(insertQuery, conn))
                     {
-                        return BadRequest(new { message = "User with the given Trainee ID already exists." });
-                    }
-
-                    // Insert new user if not already present
-                    using (SqlCommand insertUserCommand = new SqlCommand(query, conn))
-                    {
-                        insertUserCommand.Parameters.AddWithValue("@Username", user.Username);
-                        insertUserCommand.Parameters.AddWithValue("@Password", user.Password);
+                        insertUserCommand.Parameters.AddWithValue("@Username", user.Username ?? string.Empty);
+                        insertUserCommand.Parameters.AddWithValue("@Password", user.Password ?? string.Empty);
                         insertUserCommand.Parameters.AddWithValue("@Trainee_ID", user.Trainee_ID);
-                        insertUserCommand.Parameters.AddWithValue("@NIC", user.NIC);
-                        insertUserCommand.Parameters.AddWithValue("@Trainee_Name", user.Trainee_Name);
-                        insertUserCommand.Parameters.AddWithValue("@IsActive", 0);  // Assuming IsActive is 0 for new users
+                        insertUserCommand.Parameters.AddWithValue("@NIC", user.NIC ?? string.Empty);
+                        insertUserCommand.Parameters.AddWithValue("@Trainee_Name", user.Trainee_Name ?? string.Empty);
+                        insertUserCommand.Parameters.AddWithValue("@IsActive", 0); // Default IsActive to 0
                         insertUserCommand.Parameters.AddWithValue("@Image", avatarData);
 
                         await insertUserCommand.ExecuteNonQueryAsync();
@@ -276,17 +403,18 @@ namespace IMS_EarlyLeave.Server.Controllers
             }
             catch (SqlException sqlEx)
             {
-                // Log the detailed SQL error for debugging purposes
-                // LogError(sqlEx.Message); // Implement logging if required
+                // Log the detailed SQL error for debugging
+                Console.WriteLine($"SQL Error: {sqlEx.Message}");
                 return StatusCode(500, new { message = "Database error occurred. Please try again later." });
             }
             catch (Exception ex)
             {
-                // Log the exception details for troubleshooting
-                // LogError(ex.Message); // Implement logging if required
+                // Log general exception details
+                Console.WriteLine($"Error: {ex.Message}");
                 return StatusCode(500, new { message = "An unexpected error occurred. Please try again later." });
             }
         }
+
 
 
         [HttpDelete]
@@ -522,7 +650,7 @@ namespace IMS_EarlyLeave.Server.Controllers
         [Route("/ReqBySupervisor")]
         public IActionResult ReqBySupervisorID(string supID)
         {
-            string query = "SELECT Id,Trainee_ID,Name,NIC,Reason,Supervisor_ID,Leave_type,Status FROM Request WHERE Supervisor_ID = @supID";
+            string query = "SELECT Id,Trainee_ID,Name,NIC,Date,Time,Reason,Supervisor_ID,Leave_type,Status,AcceptDateTime FROM Request WHERE Supervisor_ID = @supID";
 
             List<Requests> req = new List<Requests>();
             var status = "";
@@ -542,13 +670,20 @@ namespace IMS_EarlyLeave.Server.Controllers
                                 {
                                     Id = reader["Id"] != DBNull.Value ? (int)reader["Id"] : 0,
                                     Trainee_ID = reader["Trainee_ID"] != DBNull.Value ? (int)reader["Trainee_ID"] : 0,
+                                    Name = reader["Name"].ToString(),
                                     NIC = reader["NIC"].ToString(),
+                                    Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
+                                    Time = reader["Time"].ToString(),
                                     Reason = reader["Reason"].ToString(),
                                     Supervisor_ID = reader["Supervisor_ID"].ToString(),
                                     Leave_type = reader["Leave_type"].ToString(),
                                     Status = (int)reader["Status"],
+                                    AcceptDateTime = reader["AcceptDateTime"] != DBNull.Value && reader["AcceptDateTime"] is DateTime
+                                             ? ((DateTime)reader["AcceptDateTime"]).Date
+                                             : DateTime.MinValue // Default to MinValue if invalid
 
                                 });
+
                             }
 
 
@@ -564,6 +699,62 @@ namespace IMS_EarlyLeave.Server.Controllers
             }
 
         }
+
+        [HttpPost]
+        [Route("/ReqBySupervisorandTrainee")]
+        public IActionResult ReqBySupervisorIDandTraineeID(string supID,int trainee_id)
+        {
+            string query = "SELECT Id,Trainee_ID,Name,NIC,Date,Time,Reason,Supervisor_ID,Leave_type,Status,AcceptDateTime FROM Request WHERE Supervisor_ID = @supID AND Trainee_ID = @Trainee_id";
+
+            List<Requests> req = new List<Requests>();
+            var status = "";
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@supID", supID);
+                        cmd.Parameters.AddWithValue("@Trainee_id", trainee_id);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                req.Add(new Requests
+                                {
+                                    Id = reader["Id"] != DBNull.Value ? (int)reader["Id"] : 0,
+                                    Trainee_ID = reader["Trainee_ID"] != DBNull.Value ? (int)reader["Trainee_ID"] : 0,
+                                    Name = reader["Name"].ToString(),
+                                    NIC = reader["NIC"].ToString(),
+                                    Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
+                                    Time = reader["Time"].ToString(),
+                                    Reason = reader["Reason"].ToString(),
+                                    Supervisor_ID = reader["Supervisor_ID"].ToString(),
+                                    Leave_type = reader["Leave_type"].ToString(),
+                                    Status = (int)reader["Status"],
+                                    AcceptDateTime = reader["AcceptDateTime"] != DBNull.Value && reader["AcceptDateTime"] is DateTime
+                                             ? ((DateTime)reader["AcceptDateTime"]).Date
+                                             : DateTime.MinValue // Default to MinValue if invalid
+
+                                });
+
+                            }
+
+
+                            return Ok(req);
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Server error" });
+            }
+
+        }
+
 
         [HttpPut]
         [Route("/SupervisorApproval")]
@@ -1022,11 +1213,107 @@ namespace IMS_EarlyLeave.Server.Controllers
         }
 
         [HttpGet]
+        [Route("/PendingRequestsbySupervisor")]
+        public IActionResult pendingRequestsBySupervisor(string Supervisor_ID)
+        {
+            string query = "SELECT * FROM Request WHERE Status = 0 AND Supervisor_ID = @sup_id";
+            List<Requests> req = new List<Requests>();
+
+            try
+            {
+
+                using (SqlConnection con = new SqlConnection(_connectionString))
+                {
+                    con.Open();
+                    using (SqlCommand comm = new SqlCommand(query, con))
+                    {
+                        comm.Parameters.AddWithValue("@sup_id", Supervisor_ID);
+                        using (SqlDataReader reader = comm.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                req.Add(new Requests
+                                {
+
+
+                                    Id = (int)reader["Id"],
+                                    Trainee_ID = (int)reader["Trainee_ID"],
+                                    Name = reader["Name"].ToString(),
+                                    NIC = reader["NIC"].ToString(),
+                                    //Handling TimeSpan conversion to DateTime
+                                    Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
+                                    Time = reader["Time"].ToString(),
+                                    Reason = reader["Reason"].ToString(),
+                                    Supervisor_ID = reader["Supervisor_ID"].ToString(),
+                                    Leave_type = reader["Leave_type"].ToString(),
+                                    Status = (int)reader["Status"]
+
+                                });
+
+                            }
+                            return Ok(req);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+
+            }
+
+        }
+
+        [HttpGet]
+        [Route("/PendingRequestsCountbySupervisor")]
+        public IActionResult pendingRequestsCount(string Supervisor_ID)
+        {
+            string query = "SELECT Count(*) FROM Request WHERE Status = 0 AND Supervisor_ID = @sup_id";
+            int count = -1;
+
+            try
+            {
+
+                using (SqlConnection con = new SqlConnection(_connectionString))
+                {
+                    con.Open();
+                    using (SqlCommand comm = new SqlCommand(query, con))
+                    {
+                        comm.Parameters.AddWithValue("@sup_id", Supervisor_ID);
+                         
+                        using (SqlDataReader reader = comm.ExecuteReader())
+                        {
+
+                            if (reader.Read())
+                            {
+                                count = reader.GetInt32(0);
+
+                            }
+
+                        }
+                        return Ok(count);
+
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+
+            }
+
+        }
+
+        [HttpGet]
         [Route("/ApprovedRequests")]
         public IActionResult ApprovedRequets(int trainee_id)
         {
 
-            string query = "SELECT Id,Date,Status FROM Request WHERE Trainee_ID = @TraineeID AND Status = 1";
+            string query = @"SELECT Id, Trainee_ID, Name, NIC, Date, Time, Reason, Supervisor_ID, Leave_type, Status, AcceptDateTime 
+                            FROM Request WHERE Trainee_ID = @TraineeID AND Status = 1";
+
             List<Requests> requests = new List<Requests>();
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -1042,8 +1329,16 @@ namespace IMS_EarlyLeave.Server.Controllers
                             Requests req = new Requests
                             {
                                 Id = (int)reader["Id"],
+                                Trainee_ID = (int)reader["Trainee_ID"],
+                                Name = reader["Name"] as string,
+                                NIC = reader["NIC"] as string,
                                 Date = reader["Date"] != DBNull.Value ? (DateTime)reader["Date"] : DateTime.MinValue,
-                                Status = (int)reader["Status"]
+                                Time = reader["Time"] as string,
+                                Reason = reader["Reason"] as string,
+                                Supervisor_ID = reader["Supervisor_ID"] as string,
+                                Leave_type = reader["Leave_type"] as string,
+                                Status = (int)reader["Status"],
+                                AcceptDateTime = reader["AcceptDateTime"] != DBNull.Value ? (DateTime)reader["AcceptDateTime"] : DateTime.MinValue
 
                             };
 
@@ -1694,9 +1989,9 @@ namespace IMS_EarlyLeave.Server.Controllers
 
                     // SQL Query
                     string query = @"
-                        SELECT TOP 1000 TraineeID, LeaveCount, Month, CreatedAt, [UpdatedAt]
-                        FROM TraineeLeave
-                        ORDER BY CreatedAt DESC WHERE TraineeID = @Trainee_ID";
+                        SELECT TraineeID, LeaveCount, Month, CreatedAt, UpdatedAt
+                        FROM TraineeLeave WHERE TraineeID = @Trainee_ID
+                        ORDER BY CreatedAt DESC ";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -1741,55 +2036,42 @@ namespace IMS_EarlyLeave.Server.Controllers
             }
         }
 
-        // Method to get the leave records
-        [HttpGet]
-        [Route("/Leaves")]
-        public async Task<IActionResult> GetTraineeLeaves(int trainee_id)
+        [HttpPost]
+        [Route("/Setleaves")]
+        public async Task<IActionResult> SetLeaves([FromBody] LeaveMonthCount model)
         {
-            List<LeaveMonthCount> traineeLeaves = new List<LeaveMonthCount>();
+            if (model == null)
+            {
+                return BadRequest("Invalid data.");
+            }
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
-                    await connection.OpenAsync();
+                    await conn.OpenAsync();
 
-                    // SQL Query
-                    string query = @"
-                        SELECT TOP 1000 TraineeID, LeaveCount, Month, CreatedAt, [UpdatedAt]
-                        FROM TraineeLeave
-                        ORDER BY CreatedAt DESC WHERE TraineeID = @Trainee_ID";
-
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand cmd = new SqlCommand("INSERT INTO TraineeLeave (TraineeID, LeaveCount, Month, UpdatedAt) VALUES (@TraineeID, @LeaveCount, @Month, @UpdatedAt)", conn))
                     {
-                        command.Parameters.AddWithValue("@Trainee_ID", trainee_id);
-                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                LeaveMonthCount traineeLeave = new LeaveMonthCount
-                                {
-                                    TraineeID = reader.GetInt32(0),
-                                    LeaveBalance = reader.GetInt32(1),
-                                    Month = reader.GetString(2),
-                                    CreatedAt = reader.GetDateTime(3),
-                                    UpdatedAt = reader.GetDateTime(4)
-                                };
+                        // Prevent SQL Injection by using parameters
+                        cmd.Parameters.AddWithValue("@TraineeID", model.TraineeID);
+                        cmd.Parameters.AddWithValue("@LeaveCount", model.LeaveBalance);
+                        cmd.Parameters.AddWithValue("@Month", model.Month);
+                        cmd.Parameters.AddWithValue("@UpdatedAt", DateTime.Now); // Set updated time
 
-                                traineeLeaves.Add(traineeLeave);
-                            }
+                        // Execute the command
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            return Ok("Leave data saved successfully.");
+                        }
+                        else
+                        {
+                            return BadRequest("Failed to save leave data.");
                         }
                     }
                 }
-
-                // Return 404 if no records are found
-                if (traineeLeaves.Count == 0)
-                {
-                    return NotFound(new { Message = "No trainee leave records found." });
-                }
-
-                // Return the list of trainee leaves
-                return Ok(traineeLeaves);
             }
             catch (SqlException sqlEx)
             {
@@ -1801,7 +2083,137 @@ namespace IMS_EarlyLeave.Server.Controllers
                 // General exception handling
                 return StatusCode(500, new { Message = "An internal server error occurred.", Error = ex.Message });
             }
+
+
         }
-    }
+
+        [HttpPost]
+        [Route("/ExcelSheet")]
+        public async Task<IActionResult> ExportLeaveRequests([FromBody]List<Requests> leaveRequests)
+        {
+            if (leaveRequests == null || leaveRequests.Count == 0)
+            {
+                return BadRequest("No leave requests provided.");
+            }
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Leave Requests");
+
+                // Create header row
+                worksheet.Cells[1, 1].Value = "ID";
+                worksheet.Cells[1, 2].Value = "Trainee ID";
+                worksheet.Cells[1, 3].Value = "Name";
+                worksheet.Cells[1, 4].Value = "NIC";
+                worksheet.Cells[1, 5].Value = "Date";
+                worksheet.Cells[1, 6].Value = "Time";
+                worksheet.Cells[1, 7].Value = "Reason";
+                worksheet.Cells[1, 8].Value = "Supervisor ID";
+                worksheet.Cells[1, 9].Value = "Leave Type";
+                worksheet.Cells[1, 10].Value = "Status";
+                worksheet.Cells[1, 11].Value = "Accept Date Time";
+
+                // Populate data rows
+                for (int i = 0; i < leaveRequests.Count; i++)
+                {
+                    var leave = leaveRequests[i];
+                    worksheet.Cells[i + 2, 1].Value = leave.Id;
+                    worksheet.Cells[i + 2, 2].Value = leave.Trainee_ID;
+                    worksheet.Cells[i + 2, 3].Value = leave.Name;
+                    worksheet.Cells[i + 2, 4].Value = leave.NIC;
+                    worksheet.Cells[i + 2, 5].Value = leave.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cells[i + 2, 6].Value = leave.Time;
+                    worksheet.Cells[i + 2, 7].Value = leave.Reason;
+                    worksheet.Cells[i + 2, 8].Value = leave.Supervisor_ID;
+                    worksheet.Cells[i + 2, 9].Value = leave.Leave_type;
+                    worksheet.Cells[i + 2, 10].Value = leave.Status;
+                    worksheet.Cells[i + 2, 11].Value = leave.AcceptDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+
+                // Save the Excel file to a memory stream
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+
+                var fileName = "LeaveRequests.xlsx";
+                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+        }
+
+            [HttpGet]
+            [Route("/AssigendSupervisorforTrainees")]
+            public async Task<IActionResult> GetAssignedTrainees(string supervisor_id)
+            {
+                var assignedSupervisors = new List<AssignedSupervisorTrainee>();
+
+                // Query to fetch data
+                string query = @"SELECT asup.Trainee_ID, asup.Assigned_Supervisor_ID, t.Image,t.Username 
+                                FROM Assigned_Supervisor asup
+                                JOIN Users t ON asup.Trainee_ID = t.Trainee_ID
+                                WHERE asup.Assigned_Supervisor_ID = @Supervisor_id ";
+
+            // Convert the image to a base64 string if it exists
+            string? imageBase64 = null;
+
+            try
+                {
+                    // Create a connection to the SQL database
+                    using (SqlConnection conn = new SqlConnection(_connectionString))
+                    {
+                        await conn.OpenAsync();  // Open connection asynchronously
+
+
+                        // Create a SQL command
+                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@Supervisor_id", supervisor_id);
+                            // Execute the query and read the results
+                            using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                                {
+                                while (await reader.ReadAsync())
+                                {
+                                    if (!reader.IsDBNull(2))
+                                    {
+                                        byte[] imageBytes = (byte[])reader["Image"];
+                                        imageBase64 = Convert.ToBase64String(imageBytes);
+                                    }
+                                // Populate the data model with results
+                                assignedSupervisors.Add(new AssignedSupervisorTrainee
+                                    {
+                                        Trainee_ID = reader["Trainee_ID"] != DBNull.Value ? (int)reader["Trainee_ID"] : 0,
+                                        Assigned_Supervisor_ID = reader["Assigned_Supervisor_ID"] != DBNull.Value ? (int)reader["Assigned_Supervisor_ID"] : 0,
+                                        Name = reader["Username"].ToString(),
+                                        Image = imageBase64
+                                        
+                                });
+                                }
+                            }
+                        }
+                    }
+
+                    return Ok(assignedSupervisors);  // Return the results as JSON
+                }
+                catch (SqlException ex)
+                {
+                    return StatusCode(500, $"Database error: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Server error: {ex.Message}");
+                }
+            }
+        
+
+        // Data model for AssignedSupervisor
+        public class AssignedSupervisorTrainee
+        {
+            public int Trainee_ID { get; set; }
+            public int Assigned_Supervisor_ID { get; set; }
+            public string? Name { get; set; }
+            public string? Image { get; set; }
+            
+        }
+    
+}
 
 }
