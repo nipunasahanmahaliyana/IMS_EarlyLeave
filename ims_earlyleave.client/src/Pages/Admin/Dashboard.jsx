@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import {
     DashboardOutlined,
@@ -20,7 +21,94 @@ import {
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+
+
 const AdminDashboard = () => {
+    const [totalUsers, setTotalUsers] = useState(null);
+    const [totalSessions, setTotalSessions] = useState(null);
+    const [PendingRequestsCount, setPendingRequestCount] = useState(null);
+    const [recentActivities, setRecentActities] = useState([]);
+
+    useEffect(() => {
+        fecthUserCount();
+        fecthSessionCount();
+        fecthPendingRequestCount();
+        fecthRecentActivities();
+    });
+
+    const fecthUserCount = async () => {
+        try {
+            
+            const response = await axios.get(`https://localhost:7247/TotalUsers`);
+
+            if (response.status === 200) {
+                console.log('User Count retrieved successfully:', response.data);
+                setTotalUsers(response.data);
+            } else {
+                console.error('Error retrieving data:');
+            }
+
+
+        } catch (error) {
+            console.error('Error fetching leave data:', error.message);
+        } 
+    };
+
+    const fecthSessionCount = async (username) => {
+        //supervisor interns only
+        try {
+
+            const response = await axios.get(`https://localhost:7247/NumberOfSessions?username=${username}`);
+
+            if (response.status === 200) {
+                console.log('Session Count retrieved successfully:', response.data);
+                setTotalSessions(response.data);
+            } else {
+                console.error('Error retrieving data:');
+            }
+
+
+        } catch (error) {
+            console.error('Error fetching leave data:', error.message);
+        }
+    };
+
+    const fecthPendingRequestCount = async (username) => {
+        try {
+
+            const response = await axios.get(`https://localhost:7247/PendingRequestsCountbySupervisor?Supervisor_ID=${username}`);
+
+            if (response.status === 200) {
+                console.log('User Count retrieved successfully:', response.data);
+                setPendingRequestCount(response.data);
+            } else {
+                console.error('Error retrieving data:');
+            }
+
+
+        } catch (error) {
+            console.error('Error fetching leave data:', error.message);
+        }
+    };
+
+
+    const fecthRecentActivities = async () => {
+        try {
+
+            const response = await axios.get(`https://localhost:7247/RecentActivities`);
+
+            if (response.status === 200) {
+                console.log('User Count retrieved successfully:', response.data);
+                setRecentActities(response.data);
+            } else {
+                console.error('Error retrieving data:');
+            }
+
+
+        } catch (error) {
+            console.error('Error fetching leave data:', error.message);
+        }
+    };
     // Sample data for the bar chart
     const chartData = {
         labels: ['January', 'February', 'March', 'April', 'May', 'June'],
@@ -94,15 +182,15 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow-md p-6">
                         <h2 className="text-2xl font-bold mb-4">Total Users</h2>
-                        <p className="text-4xl font-semibold">1,234</p>
+                        <p className="text-4xl font-semibold">{totalUsers}</p>
                     </div>
                     <div className="bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow-md p-6">
                         <h2 className="text-2xl font-bold mb-4">Active Sessions</h2>
-                        <p className="text-4xl font-semibold">567</p>
+                        <p className="text-4xl font-semibold">{totalSessions}</p>
                     </div>
                     <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-md p-6">
                         <h2 className="text-2xl font-bold mb-4">Pending Requests</h2>
-                        <p className="text-4xl font-semibold">23</p>
+                        <p className="text-4xl font-semibold">{PendingRequestsCount}</p>
                     </div>
                 </div>
 
@@ -117,19 +205,45 @@ const AdminDashboard = () => {
                 {/* Recent Activity */}
                 <div className="bg-white shadow-md rounded-lg p-6">
                     <h2 className="text-2xl font-bold text-gray-700 mb-4">Recent Activity</h2>
-                    <ul className="space-y-4">
-                        <li className="flex justify-between items-center">
-                            <span className="text-gray-600">User "John Doe" created a new request</span>
-                            <span className="text-gray-500 text-sm">2 hours ago</span>
-                        </li>
-                        <li className="flex justify-between items-center">
-                            <span className="text-gray-600">User "Jane Smith" updated her profile</span>
-                            <span className="text-gray-500 text-sm">5 hours ago</span>
-                        </li>
-                        <li className="flex justify-between items-center">
-                            <span className="text-gray-600">Admin "Mike" approved a request</span>
-                            <span className="text-gray-500 text-sm">1 day ago</span>
-                        </li>
+                    <ul>
+                        {recentActivities.length > 0 ? (
+                            recentActivities.map((activity) => {
+                                let statusText;
+
+                                // Use an if statement to determine the status
+                                if (activity.status === 1) {
+                                    statusText = "approved";
+                                } else if (activity.status === 2) {
+                                    statusText = "rejected";
+                                } else if (activity.status === 0) {
+                                    statusText = "pending";
+                                } else {
+                                    statusText = "unknown";
+                                }
+
+                                return (
+                                    <li
+                                        key={activity.activityID}
+                                        className="mb-3 p-3 bg-white rounded-md shadow-sm"
+                                    >
+                                        <p className="text-gray-800">
+                                            <span className="font-medium">
+                                                Trainee ID: {activity.trainee_ID}
+                                            </span>
+                                        </p>
+                                        <p className="text-gray-800">
+                                            {activity.description}
+                                            <span className="text-blue-500 font-medium">{statusText}.</span>
+                                        </p>
+                                        <p className="text-gray-500 text-sm">
+                                            Timestamp: {new Date(activity.timeStamp).toLocaleString()}
+                                        </p>
+                                    </li>
+                                );
+                            })
+                        ) : (
+                            <p className="text-gray-500">No recent activities found.</p>
+                        )}
                     </ul>
                 </div>
             </div>
