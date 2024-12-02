@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect} from 'react';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import {
     DashboardOutlined,
-    UserOutlined,
-    SettingOutlined,
-    FileOutlined,
-    LogoutOutlined
+    LogoutOutlined,
+    UsergroupAddOutlined,
+    FileTextOutlined,
+    HistoryOutlined,
+    CheckCircleOutlined,
+    HomeOutlined
+
 } from '@ant-design/icons';
+
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -29,11 +33,14 @@ const AdminDashboard = () => {
     const [PendingRequestsCount, setPendingRequestCount] = useState(null);
     const [recentActivities, setRecentActities] = useState([]);
 
+    const username = sessionStorage.getItem('Service_ID');
+
     useEffect(() => {
         fecthUserCount();
-        fecthSessionCount();
-        fecthPendingRequestCount();
+        fecthSessionCount(username);
+        fecthPendingRequestCount(username);
         fecthRecentActivities();
+        fetchData();
     });
 
     const fecthUserCount = async () => {
@@ -42,7 +49,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`https://localhost:7247/TotalUsers`);
 
             if (response.status === 200) {
-                console.log('User Count retrieved successfully:', response.data);
+                //console.log('User Count retrieved successfully:', response.data);
                 setTotalUsers(response.data);
             } else {
                 console.error('Error retrieving data:');
@@ -61,7 +68,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`https://localhost:7247/NumberOfSessions?username=${username}`);
 
             if (response.status === 200) {
-                console.log('Session Count retrieved successfully:', response.data);
+                //console.log('Session Count retrieved successfully:', response.data);
                 setTotalSessions(response.data);
             } else {
                 console.error('Error retrieving data:');
@@ -79,7 +86,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`https://localhost:7247/PendingRequestsCountbySupervisor?Supervisor_ID=${username}`);
 
             if (response.status === 200) {
-                console.log('User Count retrieved successfully:', response.data);
+                //console.log('Pending Request Count retrieved successfully:', response.data);
                 setPendingRequestCount(response.data);
             } else {
                 console.error('Error retrieving data:');
@@ -98,7 +105,7 @@ const AdminDashboard = () => {
             const response = await axios.get(`https://localhost:7247/RecentActivities`);
 
             if (response.status === 200) {
-                console.log('User Count retrieved successfully:', response.data);
+                //console.log('Recent Actitvity retrieved successfully:', response.data);
                 setRecentActities(response.data);
             } else {
                 console.error('Error retrieving data:');
@@ -110,18 +117,22 @@ const AdminDashboard = () => {
         }
     };
     // Sample data for the bar chart
-    const chartData = {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+    // State for the chart data
+    const [chartData, setChartData] = useState({
+        labels: [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December',
+        ],
         datasets: [
             {
-                label: 'New Users',
-                data: [65, 59, 80, 81, 56, 55],
+                label: 'Assigned Trainees',
+                data: Array(12).fill(0), // Initialize with zeros for all months
                 backgroundColor: 'rgba(75, 192, 192, 0.6)',
                 borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }
-        ]
-    };
+                borderWidth: 1,
+            },
+        ],
+    });
 
     const chartOptions = {
         responsive: true,
@@ -131,52 +142,93 @@ const AdminDashboard = () => {
             },
             title: {
                 display: true,
-                text: 'User Activity Overview'
+                text: 'Assigend Trainees Count Overview'
             }
         }
     };
+
+    const fetchData = async () => {
+        try {
+            // Fetch data from your API using Axios
+            const response = await axios.get(`https://localhost:7247/TraineeCountOnSupervisor?supervisor_id=19559`);
+         
+
+            const data = response.data;
+
+            // Map fetched data to the correct months
+            const monthIndexMap = {
+                January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
+                July: 6, August: 7, September: 8, October: 9, November: 10, December: 11,
+            };
+
+            // Create an updated data array
+            const updatedData = Array(12).fill(0); // Default to 0 for all months
+            data.forEach(item => {
+                const monthIndex = monthIndexMap[item.month];
+                if (monthIndex !== undefined) {
+                    updatedData[monthIndex] = item.count; // Assign count to the correct month
+                }
+            });
+
+            // Update chart data
+            setChartData(prevData => ({
+                ...prevData,
+                datasets: [
+                    {
+                        ...prevData.datasets[0],
+                        data: updatedData,
+                    },
+                ],
+            }));
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
 
     return (
         <div className="min-h-screen flex">
             {/* Sidebar */}
             <aside className="bg-gradient-to-r from-blue-900 to-purple-800 w-64 space-y-6 py-7 px-2 flex flex-col shadow-lg">
-                <a href="#" className="text-white flex items-center space-x-2 px-4">
+                <a href="/AdminDashboard" className="text-white flex items-center space-x-2 px-4">
                     <DashboardOutlined className="text-2xl" />
                     <span className="text-2xl font-extrabold">Admin Panel</span>
                 </a>
 
-                <nav className="mt-10">
+                <nav className="mt-10 space-y-1">
+                    <a href="/AdminDashboard" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
+                        <HomeOutlined className="mr-2 text-xl" />
+                        <span>Dashboard</span>
+                    </a>
                     <a href="/ManageUsers" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
-                        <UserOutlined className="mr-2 text-xl" />
-                        Users
+                        <UsergroupAddOutlined className="mr-2 text-xl" />
+                        <span>Manage Users</span>
                     </a>
                     <a href="/Report" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
-                        <FileOutlined className="mr-2 text-xl" />
-                        Reports
+                        <FileTextOutlined className="mr-2 text-xl" />
+                        <span>Reports</span>
                     </a>
                     <a href="/History" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
-                        <SettingOutlined className="mr-2 text-xl" />
-                        History
+                        <HistoryOutlined className="mr-2 text-xl" />
+                        <span>History</span>
                     </a>
                     <a href="/Approve" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
-                        <SettingOutlined className="mr-2 text-xl" />
-                        Approve
+                        <CheckCircleOutlined className="mr-2 text-xl" />
+                        <span>Approve</span>
                     </a>
-                    <a href="/AdminDashboard" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
-                        <SettingOutlined className="mr-2 text-xl" />
-                        Dashboard
-                    </a>
-                    <a href="#" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
+
+                    <a href="/Logout" className="text-gray-300 flex items-center px-4 py-2 hover:bg-purple-700 hover:text-white transition duration-300">
                         <LogoutOutlined className="mr-2 text-xl" />
-                        Logout
+                        <span>Logout</span>
                     </a>
                 </nav>
             </aside>
 
+
             {/* Main Content */}
-            <div className="flex-1 p-10">
+            <div className="flex-1 p-10  bg-gradient-to-r from-green-400 to-blue-500">
                 {/* Dashboard Heading */}
-                <h1 className="text-4xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+                <h1 className="text-4xl font-bold text-white mb-6">Admin Dashboard - {username ? username : "Guest"}</h1>
 
                 {/* Cards for statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -195,15 +247,15 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Chart Section */}
-                <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-700 mb-4">User Activity Overview</h2>
-                    <div className="h-64">
+                <div className="bg-white shadow-md rounded-lg p-6 mb-8 w-[160vh]">
+                    <h2 className="text-2xl font-bold text-gray-700 mb-4">Assigned Trainees Overview</h2>
+                    <div className="h-[60vh]">
                         <Bar data={chartData} options={chartOptions} />
                     </div>
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white shadow-md rounded-lg p-6">
+                <div className="bg-white shadow-md rounded-lg p-6 overflow-scroll h-[50vh]">
                     <h2 className="text-2xl font-bold text-gray-700 mb-4">Recent Activity</h2>
                     <ul>
                         {recentActivities.length > 0 ? (

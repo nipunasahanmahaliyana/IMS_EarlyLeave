@@ -34,7 +34,12 @@ function AddRequest() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [reason, setReason] = useState('');
-    
+    const [showDropdown, setShowDropdown] = useState(false); // State to control dropdown visibility
+    const [hasNewNotifications, setHasNewNotifications] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     const handleLogoutClick = () => {
         setShowPopup(true); // Show the popup
@@ -222,6 +227,46 @@ function AddRequest() {
 
        
     };
+    const checkForNewNotifications = async () => {
+        try {
+            const response = await axios.get('https://localhost:7247/GetUnreadNotifications');
+            const data = response.data;
+
+            //console.log("Fetched notifications:", data); // Debug log
+
+            if (data.length > 0) {
+                setHasNewNotifications(true); // Show red mark
+                setNotifications(data); // Store the notifications
+            } else {
+                setHasNewNotifications(false); // No new notifications
+                setNotifications([]); // Clear notifications if none found
+            }
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            alert("Failed to fetch notifications. Please try again."); // User feedback
+        }
+    };
+
+
+    const handleNotificationClick = async () => {
+        // Toggle dropdown visibility
+        setShowDropdown(!showDropdown);
+
+        // Mark notifications as read only if dropdown is open
+        if (showDropdown) {
+            setHasNewNotifications(false); // Remove the red mark
+
+            // Optionally, you can make a POST request to mark them as read in the backend
+            try {
+                await axios.post('https://localhost:7247/MarkNotificationsAsRead'); // API call to mark as read
+                checkForNewNotifications(); // Re-fetch notifications after marking as read
+            } catch (error) {
+                console.error("Error marking notifications as read:", error);
+                alert("Failed to mark notifications as read."); // User feedback
+            }
+        }
+    };
+
 
 
     return (
@@ -234,38 +279,69 @@ function AddRequest() {
 
                     <div className="flex items-center">
                         <ul className="md:flex text-white items-center">
-                            <a href="/Profile">
-                                <li className="mr-6 flex items-center cursor-pointer hover:text-black transition duration-300">
-                                    <img src={logoImage} className="w-[50px] h-[50px] rounded-full object-cover mr-2" alt="Profile" />
-                                    <span>{trainee_id}</span>
-                                </li>
-                            </a>
-                            <li>
-                                <a className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center" onClick={handleLogoutClick}>
-                                    <FaSignOutAlt className="h-5 w-5 mr-2" />
-                                    <span className="mr-3">Logout</span>
-                                </a>
-                            </li>
-                            <li className="relative">
-                                <button
-                                    className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center px-2"
-                                    onClick={toggleDropdown}
-                                >
-                                    <FaBell className="h-5 w-5 text-white mr-3" />
 
-                                </button>
-                                {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg">
-                                        <div className="p-2 border-b">
-                                            <span className="font-bold">Notifications</span>
+                            <li className="relative">
+                                {/* Notification Dropdown */}
+                                <div className="relative">
+                                    <button onClick={handleNotificationClick} className="relative">
+                                        <FaBell className="h-5 w-5 mt-2 mr-4" />
+                                        {hasNewNotifications && (
+                                            <span className="absolute bottom-4 right-4 h-2 w-2 bg-red-500 rounded-full"></span>
+                                        )}
+                                    </button>
+
+                                    {showDropdown && notifications.length > 0 ? (
+                                        <div className="absolute right-0 mt-2 bg-gradient-to-br from-gray-100 to-white shadow-lg rounded-lg p-4 w-64 z-10 transition-transform transform scale-95 hover:scale-100 duration-200">
+                                            <h4 className="text-lg font-semibold mb-2 text-gray-800 border-b border-gray-300 pb-2">Notifications</h4>
+                                            <ul className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                                                {notifications.map((notification) => (
+                                                    <li key={notification.notifi_ID} className="p-2 border-b border-gray-200 hover:bg-gray-100 rounded-md flex items-start transition duration-150 ease-in-out">
+                                                        <div className="bg-green-100 rounded-full p-2 mr-3">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-800">{notification.description}</p>
+                                                            <small className="text-gray-500">{new Date(notification.timestamp).toLocaleDateString()}</small>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
-                                        <ul>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 1</li>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 2</li>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 3</li>
-                                        </ul>
+
+
+                                    ) : showDropdown && notifications.length === 0 ? (
+                                        <div className="absolute mt-2 bg-white shadow-lg rounded-lg p-4 w-64 z-10">
+                                            <p className="text-gray-600">Nothing new mate</p>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </li>
+
+                            <li>
+                            {/* Avatar and Notifications */}
+                            <div className="relative flex items-center">
+                                <button className="md:hidden flex items-center" onClick={toggleMobileMenu}>
+                                    <span className="text-white font-semibold">Menu</span>
+                                </button>
+                                <div className="hidden md:flex flex-row mr-4 items-center space-x-2">
+                                    <a href="/Profile" className="flex items-center hover:text-blue-300 transition duration-300">
+                                        <img
+                                            id="avatarImage"
+                                            src="data:image/jpeg;base64,@Model.imageBase64"
+                                            className="w-10 h-10 rounded-full object-cover hover:scale-110 transition-transform duration-200"
+                                        />
+                                            <span className="ml-2 text-sm font-semibold">{trainee_id}</span>
+                                    </a>
                                     </div>
-                                )}
+                                
+                           
+
+                                <button className="cursor-pointer text-white hover:text-yellow-400 transition duration-300 flex items-center mr-4" onClick={handleLogoutClick}>
+                                    <FaSignOutAlt className="h-5 w-5 ml-2 mr-2" />
+                                </button>
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -304,18 +380,6 @@ function AddRequest() {
                             <a href="/Profile" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
                                 <UserOutlined className="h-6 w-6 mr-3" />
                                 <span className="font-medium">Profile</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/Notification" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                <BellOutlined className="h-6 w-6 mr-3" />
-                                <span className="font-medium">Notifications</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/Download" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                <DownloadOutlined className="h-6 w-6 mr-3" />
-                                <span className="font-medium">Permissions</span>
                             </a>
                         </li>
                         <li>

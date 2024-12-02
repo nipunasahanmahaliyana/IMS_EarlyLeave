@@ -183,12 +183,6 @@ const Requests = () => {
                             </a>
                         </li>
                         <li>
-                            <a href="/Notifications" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                <BellOutlined className="h-6 w-6 mr-3" />
-                                <span className="font-medium">Notifications</span>
-                            </a>
-                        </li>
-                        <li>
                             <a href="/Download" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
                                 <DownloadOutlined className="h-6 w-6 mr-3" />
                                 <span className="font-medium">Permissions</span>

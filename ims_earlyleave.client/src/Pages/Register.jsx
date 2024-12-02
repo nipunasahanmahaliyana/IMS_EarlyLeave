@@ -3,8 +3,9 @@ import { gsap } from 'gsap';
 import backgroundImage from '../assets/Home.png';
 
 const Registration = () => {
+    const [id, setid] = useState('');
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [designation, setdesignation] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -14,15 +15,8 @@ const Registration = () => {
         setError('');
 
         // Basic form validation
-        if (!name || !email || !password || !confirmPassword) {
+        if (!name || !designation || !password || !confirmPassword) {
             setError('All fields are required');
-            return;
-        }
-
-        // Email format validation
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(email)) {
-            setError('Please enter a valid email address');
             return;
         }
 
@@ -33,7 +27,7 @@ const Registration = () => {
         }
 
         // Success
-        console.log("Name:", name, "Email:", email, "Password:", password);
+        console.log("Id:",id, "Name:", name, "Designation:", designation, "Password:", password);
     };
 
     useEffect(() => {
@@ -46,17 +40,12 @@ const Registration = () => {
     }, []);
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8"
-            style={{
-                backgroundImage: `url(${backgroundImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}
-        >
-            <div className="max-w-md w-full space-y-8 registration-box p-8 bg-gradient-to-r from-green-400 to-blue-600 rounded-lg shadow-lg text-white">
+        <div className="min-h-screen w-full flex items-center justify-center relative"
+            style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-75"></div>
+            <div className="relative z-10 max-w-md w-full space-y-8 login-box p-8 bg-grey bg-opacity-90 rounded-2xl shadow-2xl transform transition-transform duration-300">
                 <div>
-                    <h2 className="text-center text-3xl font-extrabold text-white">Create your account</h2>
+                    <h2 className="text-center text-3xl font-extrabold text-black">Create your account</h2>
                 </div>
                 {error && (
                     <div className="bg-red-500 text-white py-2 px-4 rounded-lg text-center">
@@ -65,7 +54,22 @@ const Registration = () => {
                 )}
                 <form className="space-y-6" onSubmit={handleSubmit}>
                     <div className="relative">
-                        <label htmlFor="name" className="text-sm font-medium absolute left-3 -top-2 bg-gray-900 px-2  rounded-full">
+                        <label htmlFor="name" className="text-sm font-medium text-white absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
+                            Service ID
+                        </label>
+                        <input
+                            id="id"
+                            name="id"
+                            type="number"
+                            autoComplete="id"
+                            className="w-full px-4 py-3 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white text-sm"
+                            placeholder="Enter the service number"
+                            value={id}
+                            onChange={(e) => setid(e.target.value)}
+                        />
+                    </div>
+                    <div className="relative">
+                        <label htmlFor="name" className="text-sm font-medium text-white absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
                             Full Name
                         </label>
                         <input
@@ -73,29 +77,29 @@ const Registration = () => {
                             name="name"
                             type="text"
                             autoComplete="name"
-                            className="w-full px-2 py-4 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white text-sm"
+                            className="w-full px-4 py-3 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white text-sm"
                             placeholder="Enter the name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
                     <div className="relative">
-                        <label htmlFor="email" className="text-sm font-medium absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
-                            Email
+                        <label htmlFor="email" className="text-sm font-medium text-white absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
+                            Designation
                         </label>
                         <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
+                            id="designation"
+                            name="designation"
+                            type="text"
+                            autoComplete="designaation"
                             className="w-full px-4 py-3 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white text-sm"
-                            placeholder="Email Address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter desgination"
+                            value={designation}
+                            onChange={(e) => setdesignation(e.target.value)}
                         />
                     </div>
                     <div className="relative">
-                        <label htmlFor="password" className="text-sm font-medium absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
+                        <label htmlFor="password" className="text-sm font-medium text-white absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
                             Password
                         </label>
                         <input
@@ -110,7 +114,7 @@ const Registration = () => {
                         />
                     </div>
                     <div className="relative">
-                        <label htmlFor="confirmPassword" className="text-sm font-medium absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
+                        <label htmlFor="confirmPassword" className="text-sm font-medium text-white absolute left-3 -top-2 bg-gray-900 px-2 rounded-full">
                             Confirm Password
                         </label>
                         <input
@@ -118,7 +122,7 @@ const Registration = () => {
                             name="confirmPassword"
                             type="password"
                             autoComplete="new-password"
-                            className="w-full px-4 py-3 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white text-sm5"
+                            className="w-full text-sm px-4 py-3 bg-transparent border-b border-white text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder-white "
                             placeholder="Confirm Password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -127,7 +131,7 @@ const Registration = () => {
                     <div>
                         <button
                             type="submit"
-                            className="w-full py-3 bg-gray-700 text-white font-semibold rounded-md hover:bg-gray-600 transition duration-300 ease-out"
+                            className="w-full py-3 bg-gray-700 text-white font-semibold text-white rounded-md hover:bg-gray-600 transition duration-300 ease-out"
                         >
                             Sign up
                         </button>
@@ -139,3 +143,5 @@ const Registration = () => {
 };
 
 export default Registration;
+
+

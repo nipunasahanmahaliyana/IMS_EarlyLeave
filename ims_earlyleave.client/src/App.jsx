@@ -6,7 +6,7 @@ import Home from "./Pages/Home";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import AddRequest from "./Pages/AddRequest";
-import SupervisorApprove from "./Pages/SupervisorAprrove";
+import SupervisorApprove from "./Pages/Admin/SupervisorAprrove";
 import DownloadRequest from "./Pages/DownloadRequest";
 import Notifications from "./Pages/Notifications"
 import AdminDashboard from "./Pages/Admin/Dashboard";

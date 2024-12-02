@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using OfficeOpenXml;
 using System.Data;
 using Org.BouncyCastle.Pqc.Crypto.Lms;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 
 namespace IMS_EarlyLeave.Server.Controllers
@@ -96,11 +97,53 @@ namespace IMS_EarlyLeave.Server.Controllers
             
         }
 
+        [Route("/Adminlogin")]
+        [HttpGet]
+        public IActionResult AdminLogin(int username, string password)
+        {
+            string query = "SELECT Service_ID,Password FROM Supervisor WHERE Service_ID = @Service_id and Password = @Password";
+            int service_ID = 0;
+            
+            try
+            {
+                using (SqlConnection con = new SqlConnection(_connectionString))
+                {
+
+                    con.Open();
+
+                    using (SqlCommand comm = new SqlCommand(query, con))
+                    {
+
+                        comm.Parameters.AddWithValue("@Service_id", username);
+                        comm.Parameters.AddWithValue("@Password", password);
+
+                        using (SqlDataReader reader = comm.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                service_ID = (int)reader["Service_ID"];
+                                
+                            }
+
+                        }
+                        return Ok(service_ID);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+
+
+        }
+
         [Route("/NumberOfSessions")]
         [HttpGet]
         public IActionResult GetSessions(string username)
         {
-
             string query = @"
             SELECT COUNT(Log_in)
             FROM Users 
@@ -108,30 +151,47 @@ namespace IMS_EarlyLeave.Server.Controllers
                 ON Users.Trainee_ID = Assigned_Supervisor.Trainee_ID
             WHERE Assigned_Supervisor.Assigned_Supervisor_ID = @sup_id AND Log_in = 1";
 
-            int Count_login =-1;
+            int countLogin = -1;
 
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            try
             {
-                conn.Open();
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@sup_id", username);
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
+                        // Use parameterized queries to avoid SQL injection
+                        cmd.Parameters.AddWithValue("@sup_id", username ?? string.Empty);
 
-                        if (reader.Read())
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            Count_login = reader.GetInt32(0);
-
+                            if (reader.Read())
+                            {
+                                // Check if the result is NULL before reading
+                                countLogin = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            }
                         }
-                        return Ok(Count_login);
                     }
-
                 }
-            }
 
+                // Return the result
+                return Ok(countLogin);
+            }
+            catch (SqlException sqlEx)
+            {
+                // Log SQL-related exceptions (e.g., connection issues, query syntax errors)
+                Console.WriteLine($"SQL Error: {sqlEx.Message}");
+                return StatusCode(500, "A database error occurred.");
+            }
+            catch (Exception ex)
+            {
+                // Catch other exceptions
+                Console.WriteLine($"General Error: {ex.Message}");
+                return StatusCode(500, "An unexpected error occurred.");
+            }
         }
+
 
         [Route("/Requets")]
         [HttpGet]
@@ -342,31 +402,32 @@ namespace IMS_EarlyLeave.Server.Controllers
 
         [HttpPost]
         [Route("/AddUsers")]
-        public async Task<IActionResult> AddUsers([FromForm] Users user, IFormFile image)
+        public async Task<IActionResult> AddUsers([FromForm] UserDto user)
         {
             if (user == null)
             {
                 return BadRequest(new { message = "Invalid user data." });
             }
 
-            if (image == null)
-            {
-                return BadRequest(new { message = "Image is required." });
-            }
+            //if (image == null)
+            //{
+                //return BadRequest(new { message = "Image is required." });
+            //}
 
-            string selectQuery = "SELECT 1 FROM Users WHERE Trainee_ID = @Trainee_ID";
-            string insertQuery = @"INSERT INTO Users (Username, Password, Trainee_ID, NIC, Trainee_Name, IsActive, Image) 
-                           VALUES (@Username, @Password, @Trainee_ID, @NIC, @Trainee_Name, @IsActive, @Image)";
+            string selectQuery = "SELECT * FROM Users WHERE Trainee_ID = @Trainee_ID";
+            string insertQuery = @"INSERT INTO Users 
+                                   (Username, Password, Trainee_ID, NIC, Trainee_Name, IsActive,Leave_Count) 
+                                   VALUES (@Username, @Password, @Trainee_ID, @NIC, @Trainee_Name, @IsActive,@Count)";
 
             try
             {
                 // Convert the uploaded image file into a byte array
-                byte[] avatarData;
-                using (var memoryStream = new MemoryStream())
-                {
-                    await image.CopyToAsync(memoryStream);
-                    avatarData = memoryStream.ToArray();
-                }
+                //byte[] avatarData;
+                //using (var memoryStream = new MemoryStream())
+                //{
+                    //await image.CopyToAsync(memoryStream);
+                    //avatarData = memoryStream.ToArray();
+                //}
 
                 using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
@@ -393,7 +454,8 @@ namespace IMS_EarlyLeave.Server.Controllers
                         insertUserCommand.Parameters.AddWithValue("@NIC", user.NIC ?? string.Empty);
                         insertUserCommand.Parameters.AddWithValue("@Trainee_Name", user.Trainee_Name ?? string.Empty);
                         insertUserCommand.Parameters.AddWithValue("@IsActive", 0); // Default IsActive to 0
-                        insertUserCommand.Parameters.AddWithValue("@Image", avatarData);
+                        insertUserCommand.Parameters.AddWithValue("@Count", 0); // Default IsActive to 0
+                        //insertUserCommand.Parameters.AddWithValue("@Image", avatarData);
 
                         await insertUserCommand.ExecuteNonQueryAsync();
                     }
@@ -415,6 +477,14 @@ namespace IMS_EarlyLeave.Server.Controllers
             }
         }
 
+        public class UserDto
+        {
+            public string? Username { get; set; }
+            public string? Password { get; set; }
+            public int Trainee_ID { get; set; }
+            public string? NIC { get; set; }
+            public string? Trainee_Name { get; set; }
+        }
 
 
         [HttpDelete]
@@ -2202,7 +2272,56 @@ namespace IMS_EarlyLeave.Server.Controllers
                     return StatusCode(500, $"Server error: {ex.Message}");
                 }
             }
-        
+        [HttpGet]
+        [Route("/TraineeCountOnSupervisor")]
+        public async Task<IActionResult> GetTraineeCountOnSupervisor(int supervisor_id){
+            string query = @"SELECT 
+                                COUNT(Trainee_ID) AS TraineeCount,
+                                DATENAME(MONTH, Assigned_Date) AS MonthName
+                                FROM 
+                                Assigned_Supervisor
+                                WHERE 
+                                Assigned_Supervisor_ID = @sup_id
+                                GROUP BY 
+                                FORMAT(Assigned_Date, 'yyyy-MM'),
+	                            DATENAME(MONTH, Assigned_Date)
+                                ORDER BY 
+                                FORMAT(Assigned_Date, 'yyyy-MM')";
+
+            var data = new List<UserCount>();
+
+            // Create a connection to the SQL database
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                await conn.OpenAsync();
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@sup_id", supervisor_id);
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            data.Add(new UserCount
+                            {
+                                count = reader.GetInt32(0),
+                                month = reader.GetString(1)
+                            }
+                            );
+                        }
+                    }
+
+                }
+
+                return Ok(data);
+            }
+        }
+
+            public  class UserCount
+            {
+                public int count { get; set; }
+                public string? month { get; set; }
+            }
 
         // Data model for AssignedSupervisor
         public class AssignedSupervisorTrainee

@@ -2,7 +2,7 @@ import ApexCharts from 'react-apexcharts';
 import backgroundImage from '../assets/Home.png';
 import logoImage from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import LogoutPopup from './LogOut'; // Adjust the import path as needed
 import Notifications from './Notifications';
@@ -401,17 +401,9 @@ const Dashboard = () => {
                 <UserOutlined className="h-5 w-5 mr-2" />
                 <span className="font-semibold">Profile</span>
             </a>
-            <a href="/Notification" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
-                <BellOutlined className="h-5 w-5 mr-2" />
-                <span className="font-semibold">Notifications</span>
-            </a>
             <a href="/Download" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
                 <DownloadOutlined className="h-5 w-5 mr-2" />
                 <span className="font-semibold">Permissions</span>
-            </a>
-            <a href="/Approve" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
-                <CheckCircleOutlined className="h-5 w-5 mr-2" />
-                <span className="font-semibold">Approval</span>
             </a>
         </div>
 

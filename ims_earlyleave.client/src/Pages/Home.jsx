@@ -10,7 +10,7 @@ import { UserOutlined } from '@ant-design/icons'; // Importing Ant Design User i
 
 const App = () => {
     const [isLoading, setIsLoading] = useState(true);
-
+    //const [trainee_id, setTraineeID] = useState();
     // Preloader logic
     useEffect(() => {
         const timer = setTimeout(() => {

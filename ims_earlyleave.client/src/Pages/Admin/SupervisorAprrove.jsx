@@ -2,23 +2,29 @@ import React, { useEffect, useRef,useState } from 'react';
 import gsap from 'gsap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import backgroundImage from '../assets/Home.png';
-import LogoutPopup from '../Pages/LogOut';
-import logoImage from '../assets/logo.png';
-import { FaSignOutAlt, FaBell } from 'react-icons/fa';
+import backgroundImage from "../../assets/Home.png";
+import LogoutPopup from '../../Pages/LogOut';
+import logoImage from "/src/assets/logo.png";
+import { FaSignOutAlt } from 'react-icons/fa';
 import {
-    UserOutlined,
-    BellOutlined,
-    DownloadOutlined,
-    LogoutOutlined, DashboardOutlined, FileAddOutlined, HistoryOutlined
+    UsergroupAddOutlined,
+    FileTextOutlined,
+    HistoryOutlined,
+    CheckCircleOutlined,
 } from '@ant-design/icons'; // Ant Design icons
 
-const trainee_id = sessionStorage.getItem('Trainee ID') || "Guest"; // Fallback for missing username
+
+const username = sessionStorage.getItem('Service_ID') || "Guest"; // Fallback for missing username
+
+
 function LeaveRequests() {
 
     const [showPopup, setShowPopup] = useState(false);
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     const handleLogoutClick = () => {
         setShowPopup(true); // Show the popup
@@ -322,125 +328,85 @@ function LeaveRequests() {
 
     if (requests.length === 0) {
         return (
-            <div className="font-sans w-[196.5vh] h-[100vh]">
-                <nav className="bg-gradient-to-r from-green-400 to-blue-600 text-white shadow-xl fixed w-full z-50 transition-all duration-300 ease-in-out">
+            <div className="font-sans w-full h-full">
+                <nav className="bg-gradient-to-r from-blue-900 to-purple-800 text-white shadow-xl fixed w-full z-50 transition-all duration-300 ease-in-out">
                     <div className="container mx-auto flex items-center justify-between p-4">
-                        <div className="ml-[5vh]">
-                            <a href="/Dashboard" className="text-white text-2xl font-bold">Early Leave</a>
+                        {/* Logo and Brand */}
+                        <div className="flex items-center">
+                            <img src={logoImage} alt="Logo" className="w-12 h-12 rounded-full mr-3 transition-transform transform hover:scale-110" />
+                            <a href="/AdminDashboard" className="text-3xl font-extrabold tracking-wide hover:text-blue-300 transition duration-300">
+                                Early Leave
+                            </a>
                         </div>
 
-                        <div className="flex items-center">
-                            <ul className="md:flex text-white items-center">
-                                <a href="/Profile">
-                                    <li className="mr-6 flex items-center cursor-pointer hover:text-black transition duration-300">
-                                        <img src={logoImage} className="w-[50px] h-[50px] rounded-full object-cover mr-2" alt="Profile" />
-                                        <span>{trainee_id}</span>
-                                    </li>
-                                </a>
-                                <li>
-                                    <a className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center" onClick={handleLogoutClick}>
-                                        <FaSignOutAlt className="h-5 w-5 mr-2" />
-                                        <span className="mr-3">Logout</span>
-                                    </a>
-                                </li>
-                                <li className="relative">
-                                    <button
-                                        className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center px-2"
-                                        onClick={toggleDropdown}
-                                    >
-                                        <FaBell className="h-5 w-5 text-white mr-3" />
+                        {/* Desktop Menu */}
+                        <div className="hidden md:flex items-center space-x-6">
+                            <a href="/ManageUsers" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                                <UsergroupAddOutlined className="h-5 w-5 mr-2" />
+                                <span className="font-semibold">Manage Users</span>
+                            </a>
+                            <a href="/Report" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                                <FileTextOutlined className="h-5 w-5 mr-2" />
+                                <span className="font-semibold">Reports</span>
+                            </a>
+                            <a href="/History" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                                <HistoryOutlined className="h-5 w-5 mr-2" />
+                                <span className="font-semibold">History</span>
+                            </a>
+                            <a href="/Approve" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                                <CheckCircleOutlined className="h-5 w-5 mr-2" />
+                                <span className="font-semibold">Approve</span>
+                            </a>
 
-                                    </button>
-                                    {isDropdownOpen && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg">
-                                            <div className="p-2 border-b">
-                                                <span className="font-bold">Notifications</span>
-                                            </div>
-                                            <ul>
-                                                <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 1</li>
-                                                <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 2</li>
-                                                <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 3</li>
-                                            </ul>
-                                        </div>
-                                    )}
-                                </li>
-                            </ul>
+                        </div>
+
+                        {/* Avatar and Notifications */}
+                        <div className="relative flex items-center">
+                            <button className="md:hidden flex items-center" onClick={toggleMobileMenu}>
+                                <span className="text-white font-semibold">Menu</span>
+                            </button>
+                            <div className="hidden md:flex flex-row mr-4 items-center space-x-2">
+                                <a href="/Profile" className="flex items-center hover:text-blue-300 transition duration-300">
+                                    <img
+                                        id="avatarImage"
+                                        src="data:image/jpeg;base64,@Model.imageBase64"
+                                        className="w-10 h-10 rounded-full object-cover hover:scale-110 transition-transform duration-200"
+                                    />
+                                    <span className="ml-2 text-sm font-semibold">{username}</span>
+                                </a>
+                            </div>
+
+
+                            <button className="cursor-pointer text-white hover:text-yellow-400 transition duration-300 flex items-center mr-4" onClick={handleLogoutClick}>
+                                <FaSignOutAlt className="h-5 w-5 ml-2 mr-2" />
+                            </button>
+
                         </div>
                     </div>
+
+                    {/* Mobile Menu */}
+                    {isMobileMenuOpen && (
+                        <div className="md:hidden bg-white text-black shadow-lg transition-all duration-300 ease-in-out">
+                            <div className="flex flex-col p-4">
+                                <a href="/AddRequest" className="py-2 hover:bg-gray-200 transition-colors duration-200">Request Leave</a>
+                                <a href="/Requests" className="py-2 hover:bg-gray-200 transition-colors duration-200">Leave History</a>
+                                <a href="/Profile" className="py-2 hover:bg-gray-200 transition-colors duration-200">Profile</a>
+                                <a href="/Notification" className="py-2 hover:bg-gray-200 transition-colors duration-200">Notifications</a>
+                                <a href="/Download" className="py-2 hover:bg-gray-200 transition-colors duration-200">Permissions</a>
+                                <a href="/Approve" className="py-2 hover:bg-gray-200 transition-colors duration-200">Approval</a>
+                                <div className="mt-4">
+                                    <button className="w-full text-left py-2 hover:bg-gray-200 transition-colors duration-200" onClick={handleLogoutClick}>
+                                        Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </nav>
-                <div className="flex flex-row">
-                    <aside className="bg-gradient-to-b from-green-400 to-blue-600 text-white transition-all duration-300 ease-in-out shadow-2xl h-[100vh] px-8 py-20" style={{
-
-                        position: 'sticky',
-                        top: '0',
-
-                    }}>
-                        <img src={logoImage} className="w-[150px] absolute" alt="Logo" />
-
-                        <nav>
-                            <ul className="space-y-6 mb-6 py-20 mt-[9vh]">
-                                <li>
-                                    <a href="/Dashboard" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <DashboardOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Dashboard</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/AddRequest" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <FileAddOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Request Leave</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/Requests" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <HistoryOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Leave History</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/Profile" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <UserOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Profile</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/Notifications" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <BellOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Notifications</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/Download" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                        <DownloadOutlined className="h-6 w-6 mr-3" />
-                                        <span className="font-medium">Permissions</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <div className="mt-auto">
-                                        <a
-
-                                            className="flex items-center px-6 py-3 cursor-pointer hover:bg-red-600 rounded-md transition-all duration-200 ease-in-out"
-                                            onClick={(e) => {
-                                                e.preventDefault(); // Prevent default anchor click behavior
-                                                handleLogoutClick(); // Call the function
-                                            }}
-                                        >
-                                            <LogoutOutlined className="h-6 w-6 ml-2" />
-                                            <span className="ml-3 nav-text text-lg font-medium text-white">Logout</span>
-                                        </a>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <LogoutPopup
-                                show={showPopup}
-                                onClose={handleClosePopup}
-                                onLogout={handleLogout}
-                            />
-                        </nav>
-                    </aside>
-
-                    <div className=" p-32 px-12 w-[166vh] rounded-md" style={{
+                <div className="flex justify-center">
+                 
+                    <div className=" p-32 h-[100vh] w-full rounded-md" style={{
                         backgroundImage: `url(${backgroundImage})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
@@ -458,131 +424,91 @@ function LeaveRequests() {
     }
     return (
        
-        <div className="font-sans w-[196.5vh] h-[100vh]">
-            <nav className="bg-gradient-to-b from-green-500 to-blue-800 text-white shadow-2xl fixed w-full z-50">
+        <div className="font-sans w-full h-[100vh]">
+            <nav className="bg-gradient-to-r from-blue-900 to-purple-800 text-white shadow-xl fixed w-full z-50 transition-all duration-300 ease-in-out">
                 <div className="container mx-auto flex items-center justify-between p-4">
-                    <div className="ml-[5vh]">
-                        <a href="/Dashboard" className="text-white text-2xl font-bold">Early Leave</a>
+                    {/* Logo and Brand */}
+                    <div className="flex items-center">
+                        <img src={logoImage} alt="Logo" className="w-12 h-12 rounded-full mr-3 transition-transform transform hover:scale-110" />
+                        <a href="/AdminDashboard" className="text-3xl font-extrabold tracking-wide hover:text-blue-300 transition duration-300">
+                            Early Leave
+                        </a>
                     </div>
 
-                    <div className="flex items-center">
-                        <ul className="md:flex text-white items-center">
-                            <a href="/Profile">
-                                <li className="mr-6 flex items-center cursor-pointer hover:text-black transition duration-300">
-                                    <img src={logoImage} className="w-[50px] h-[50px] rounded-full object-cover mr-2" alt="Profile" />
-                                    <span>{trainee_id}</span>
-                                </li>
-                            </a>
-                            <li>
-                                <a className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center" onClick={handleLogoutClick}>
-                                    <FaSignOutAlt className="h-5 w-5 mr-2" />
-                                    <span className="mr-3">Logout</span>
-                                </a>
-                            </li>
-                            <li className="relative">
-                                <button
-                                    className="cursor-pointer text-white hover:text-black transition duration-300 flex items-center px-2"
-                                    onClick={toggleDropdown}
-                                >
-                                    <FaBell className="h-5 w-5 text-white mr-3" />
+                    {/* Desktop Menu */}
+                    <div className="hidden md:flex items-center space-x-6">
+                        <a href="/ManageUsers" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                            <UsergroupAddOutlined className="h-5 w-5 mr-2" />
+                            <span className="font-semibold">Manage Users</span>
+                        </a>
+                        <a href="/Report" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                            <FileTextOutlined className="h-5 w-5 mr-2" />
+                            <span className="font-semibold">Reports</span>
+                        </a>
+                        <a href="/History" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                            <HistoryOutlined className="h-5 w-5 mr-2" />
+                            <span className="font-semibold">History</span>
+                        </a>
+                        <a href="/Approve" className="flex items-center hover:text-yellow-400 transition duration-300 ease-in-out">
+                            <CheckCircleOutlined className="h-5 w-5 mr-2" />
+                            <span className="font-semibold">Approve</span>
+                        </a>
 
-                                </button>
-                                {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg">
-                                        <div className="p-2 border-b">
-                                            <span className="font-bold">Notifications</span>
-                                        </div>
-                                        <ul>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 1</li>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 2</li>
-                                            <li className="p-2 hover:bg-gray-200 cursor-pointer">Notification 3</li>
-                                        </ul>
-                                    </div>
-                                )}
-                            </li>
-                        </ul>
+                    </div>
+
+                    {/* Avatar and Notifications */}
+                    <div className="relative flex items-center">
+                        <button className="md:hidden flex items-center" onClick={toggleMobileMenu}>
+                            <span className="text-white font-semibold">Menu</span>
+                        </button>
+                        <div className="hidden md:flex flex-row mr-4 items-center space-x-2">
+                            <a href="/Profile" className="flex items-center hover:text-blue-300 transition duration-300">
+                                <img
+                                    id="avatarImage"
+                                    src="data:image/jpeg;base64,@Model.imageBase64"
+                                    className="w-10 h-10 rounded-full object-cover hover:scale-110 transition-transform duration-200"
+                                />
+                                <span className="ml-2 text-sm font-semibold">{username}</span>
+                            </a>
+                        </div>
+
+
+                        <button className="cursor-pointer text-white hover:text-yellow-400 transition duration-300 flex items-center mr-4" onClick={handleLogoutClick}>
+                            <FaSignOutAlt className="h-5 w-5 ml-2 mr-2" />
+                        </button>
+
                     </div>
                 </div>
+
+                {/* Mobile Menu */}
+                {isMobileMenuOpen && (
+                    <div className="md:hidden bg-white text-black shadow-lg transition-all duration-300 ease-in-out">
+                        <div className="flex flex-col p-4">
+                            <a href="/AddRequest" className="py-2 hover:bg-gray-200 transition-colors duration-200">Request Leave</a>
+                            <a href="/Requests" className="py-2 hover:bg-gray-200 transition-colors duration-200">Leave History</a>
+                            <a href="/Profile" className="py-2 hover:bg-gray-200 transition-colors duration-200">Profile</a>
+                            <a href="/Notification" className="py-2 hover:bg-gray-200 transition-colors duration-200">Notifications</a>
+                            <a href="/Download" className="py-2 hover:bg-gray-200 transition-colors duration-200">Permissions</a>
+                            <a href="/Approve" className="py-2 hover:bg-gray-200 transition-colors duration-200">Approval</a>
+                            <div className="mt-4">
+                                <button className="w-full text-left py-2 hover:bg-gray-200 transition-colors duration-200" onClick={handleLogoutClick}>
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </nav>
-           <div className="flex flex-row">
-                {/* Sidebar */}
-                <aside className="bg-gradient-to-b from-blue-800 to-green-500 text-white shadow-2xl h-[100vh] px-8 py-20" style={{
-                    position: 'sticky',
-                    top: '0',
-
-                }}>
-                    <img src={logoImage} className="w-[150px] absolute" alt="Logo" />
-
-                    <nav>
-                        <ul className="space-y-6 mb-6 py-20 mt-[9vh]">
-                            <li>
-                                <a href="/Dashboard" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <DashboardOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Dashboard</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/AddRequest" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <FileAddOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Request Leave</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/Requests" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <HistoryOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Leave History</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/Profile" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <UserOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Profile</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/Notifications" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <BellOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Notifications</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/Download" className="flex items-center py-2 px-4 text-white rounded-md hover:bg-white hover:text-green-500 transition duration-300 ease-in-out">
-                                    <DownloadOutlined className="h-6 w-6 mr-3" />
-                                    <span className="font-medium">Permissions</span>
-                                </a>
-                            </li>
-                            <li>
-                                <div className="mt-auto">
-                                    <a
-
-                                        className="flex items-center px-6 py-3 cursor-pointer hover:bg-red-600 rounded-md transition-all duration-200 ease-in-out"
-                                        onClick={(e) => {
-                                            e.preventDefault(); // Prevent default anchor click behavior
-                                            handleLogoutClick(); // Call the function
-                                        }}
-                                    >
-                                        <LogoutOutlined className="h-6 w-6 ml-2" />
-                                        <span className="ml-3 nav-text text-lg font-medium text-white">Logout</span>
-                                    </a>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <LogoutPopup
-                            show={showPopup}
-                            onClose={handleClosePopup}
-                            onLogout={handleLogout}
-                        />
-                    </nav>
-                </aside>
-
-                <div className="flex-1 bg-gray-100 py-32 px-12 w-[190vh] rounded-md " style={{
+           <div className="flex flex-row justify-center">
+                
+                <div className="flex-1 bg-gray-100 h-[100vh] w-full rounded-md flex justify-center" style={{
                     backgroundImage: `url(${backgroundImage})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
 
                 }}>
-                    <div className="rounded-lg shadow-md p-6 w-[150vh] bg-gradient-to-b from-green-500 to-blue-800 ">
+                    <div className=" w-full rounded-lg shadow-md p-20 mt-[10vh] w-full overflow-x-hidden overflow-y-scroll bg-gradient-to-r from-green-400 to-blue-500 p-8 ">
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 text-center">Leave Requests - Awaiting Approval</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-9 ">
                         {requests.map((request) => (
