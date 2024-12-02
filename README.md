@@ -12,10 +12,10 @@ IMS Early Leave is a comprehensive web application designed to manage early leav
 - Generate detailed reports on leave trends and employee usage.
   
 ## Tech Stack
-- Frontend
--- React JS: Interactive UI/UX components.
--- Tailwind CSS: Modern styling with responsive design.
--- GSAP: Animations for improved user experience.
+### Frontend
+- React JS: Interactive UI/UX components.
+- Tailwind CSS: Modern styling with responsive design.
+- GSAP: Animations for improved user experience.
   
 Backend
 .NET Core: Secure API development and server-side logic.
