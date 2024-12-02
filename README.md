@@ -34,7 +34,7 @@ IMS Early Leave is a comprehensive web application designed to manage early leav
 - Multi-language support for global users.
   
 ## Contributing
-- Contributions are welcome! Fork the repository, Commit your changes, and push.
+- Contributions are welcome! Fork the repository and submit a pull request.
 
 ## Contact
 - For any questions or feedback, feel free to reach out:
