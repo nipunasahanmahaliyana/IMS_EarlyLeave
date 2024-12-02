@@ -5,6 +5,7 @@ IMS Early Leave is a comprehensive web application designed to manage early leav
 ### For Employees
 - Submit early leave requests with detailed reasons.
 - Track the status of submitted requests (Approved, Rejected, or Pending).
+- can get the requests as PDFs.
 - Get real-time notifications about approval or rejection decisions.
   
 ### For Administrators
