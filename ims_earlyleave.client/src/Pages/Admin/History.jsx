@@ -32,7 +32,7 @@ const RequestHistory = () => {
     const getLeaveData = async () => {
         try {
             setLoading(true);
-            const response = await axios.post(`https://localhost:7247/ReqBySupervisor?supID=19559`);
+            const response = await axios.post(`https://imsearlyleaveserver.azurewebsites.net/ReqBySupervisor?supID=${username}`);
             if (response.status === 200) {
                 console.log('Leave data retrieved successfully:', response.data);
                 setRequests(response.data);
@@ -49,7 +49,7 @@ const RequestHistory = () => {
     const getLeaveDataByTraineeID = async (term) => {
         try {
             setLoading(true);
-            const response = await axios.post(`https://localhost:7247/ReqBySupervisorandTrainee?supID=19559&trainee_id=${term}`);
+            const response = await axios.post(`https://imsearlyleaveserver.azurewebsites.net/ReqBySupervisorandTrainee?supID=${username}&trainee_id=${term}`);
             if (response.status === 200) {
                 console.log('Leave data retrieved successfully:', response.data);
                 setRequests(response.data);

@@ -46,7 +46,7 @@ const AdminDashboard = () => {
     const fecthUserCount = async () => {
         try {
             
-            const response = await axios.get(`https://localhost:7247/TotalUsers`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/TotalUsers`);
 
             if (response.status === 200) {
                 //console.log('User Count retrieved successfully:', response.data);
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
         //supervisor interns only
         try {
 
-            const response = await axios.get(`https://localhost:7247/NumberOfSessions?username=${username}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/NumberOfSessions?username=${username}`);
 
             if (response.status === 200) {
                 //console.log('Session Count retrieved successfully:', response.data);
@@ -79,11 +79,11 @@ const AdminDashboard = () => {
             console.error('Error fetching leave data:', error.message);
         }
     };
-
+    
     const fecthPendingRequestCount = async (username) => {
         try {
 
-            const response = await axios.get(`https://localhost:7247/PendingRequestsCountbySupervisor?Supervisor_ID=${username}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/PendingRequestsCountbySupervisor?Supervisor_ID=${username}`);
 
             if (response.status === 200) {
                 //console.log('Pending Request Count retrieved successfully:', response.data);
@@ -102,7 +102,7 @@ const AdminDashboard = () => {
     const fecthRecentActivities = async () => {
         try {
 
-            const response = await axios.get(`https://localhost:7247/RecentActivities`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/RecentActivities`);
 
             if (response.status === 200) {
                 //console.log('Recent Actitvity retrieved successfully:', response.data);
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             // Fetch data from your API using Axios
-            const response = await axios.get(`https://localhost:7247/TraineeCountOnSupervisor?supervisor_id=19559`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/TraineeCountOnSupervisor?supervisor_id=19559`);
          
 
             const data = response.data;

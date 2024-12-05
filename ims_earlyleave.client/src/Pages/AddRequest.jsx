@@ -79,7 +79,7 @@ function AddRequest() {
     const fetchAssignedSupervisor = async () => {
         try {
             // Make the GET request to fetch the assigned supervisor details
-            const response = await axios.get(`https://localhost:7247/AssignedSupervisor?trainee_id=${trainee_id}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/AssignedSupervisor?trainee_id=${trainee_id}`);
 
             // If the request is successful (status code 200)
             if (response.status === 200) {
@@ -179,7 +179,7 @@ function AddRequest() {
         try {
             // Send the POST request
             const response = await axios.post(
-                `https://localhost:7247/AddRequest?trainee_id=${trainee_id}`,
+                `https://imsearlyleaveserver.azurewebsites.net/AddRequest?trainee_id=${trainee_id}`,
                 formData,  // Ensure data is stringified
                 {
                     headers: {
@@ -202,7 +202,7 @@ function AddRequest() {
             const desc = (`You submitted a ${leave_type} leave request for ${date} | ${sqlTimeString}.`);
 
             try {
-                const response = await axios.post(`https://localhost:7247/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status${0}`);
+                const response = await axios.post(`https://imsearlyleaveserver.azurewebsites.net/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status${0}`);
                 console.log('Leave request added successfully:', response.data);
             } catch (error) {
                 console.error('Error adding leave request:', error.response ? error.response.data : error.message);
@@ -229,7 +229,7 @@ function AddRequest() {
     };
     const checkForNewNotifications = async () => {
         try {
-            const response = await axios.get('https://localhost:7247/GetUnreadNotifications');
+            const response = await axios.get('https://imsearlyleaveserver.azurewebsites.net/GetUnreadNotifications');
             const data = response.data;
 
             //console.log("Fetched notifications:", data); // Debug log
@@ -258,7 +258,7 @@ function AddRequest() {
 
             // Optionally, you can make a POST request to mark them as read in the backend
             try {
-                await axios.post('https://localhost:7247/MarkNotificationsAsRead'); // API call to mark as read
+                await axios.post('https://imsearlyleaveserver.azurewebsites.net/MarkNotificationsAsRead'); // API call to mark as read
                 checkForNewNotifications(); // Re-fetch notifications after marking as read
             } catch (error) {
                 console.error("Error marking notifications as read:", error);

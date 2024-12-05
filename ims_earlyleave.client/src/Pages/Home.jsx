@@ -91,7 +91,13 @@ const App = () => {
                         </div>
                         <h1 className="text-4xl md:text-6xl font-bold mb-6 hero-text">SLT Mobitel Early Leave</h1>
                         <p className="text-lg mb-8 hero-subtext">
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+
+                            Here’s a professional and friendly welcome text for your Early Leave System:
+
+                            Welcome to the Early Leave Management System
+                            Effortlessly manage, track, and process early leave requests with our streamlined platform. Designed for supervisors and trainees, this system ensures efficient communication, quick approvals, and transparency.
+
+                            Let’s make leave management simpler and more effective together!
                         </p>
                         <a href="/Dashboard" className="px-6 py-3 border-grey-400 cusrsor:pointer text-blue-600 rounded-lg shadow hover:bg-blue-400 transition text-white">
                             Get Started

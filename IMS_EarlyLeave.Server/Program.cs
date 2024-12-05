@@ -41,6 +41,7 @@ namespace IMS_EarlyLeave.Server
                       .AllowAnyHeader());
 
 
+
             app.MapControllers();
 
             app.MapFallbackToFile("/index.html");

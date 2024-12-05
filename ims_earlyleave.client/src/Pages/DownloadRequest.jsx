@@ -31,7 +31,7 @@ const RequestForm = () => {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const response = await axios.get(`https://localhost:7247/ReqById?Trainee_ID=${username}`);
+                const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/ReqById?Trainee_ID=${username}`);
                 setRequests(response.data);
                 //message.success('Requests fetched successfully!');
             } catch (err) {
@@ -46,7 +46,7 @@ const RequestForm = () => {
 
     const downloadPDF = async (id) => {
         try {
-            const response = await axios.get(`https://localhost:7247/GenerateLeaveRequestPDF?id=${id}`, {
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/GenerateLeaveRequestPDF?id=${id}`, {
                 responseType: 'blob',
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));

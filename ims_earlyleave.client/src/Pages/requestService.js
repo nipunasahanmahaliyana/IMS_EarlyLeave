@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:7247/Requets';
+const API_URL = 'https://imsearlyleaveserver.azurewebsites.net/Requets';
 
 const fetchRequests = async () => {
     try {

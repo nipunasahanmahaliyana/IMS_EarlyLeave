@@ -1,4 +1,4 @@
-@IMS_EarlyLeave.Server_HostAddress = http://localhost:5142
+@IMS_EarlyLeave.Server_HostAddress = https://imsearlyleaveserver.azurewebsites.net/
 
 GET {{IMS_EarlyLeave.Server_HostAddress}}/weatherforecast/
 Accept: application/json

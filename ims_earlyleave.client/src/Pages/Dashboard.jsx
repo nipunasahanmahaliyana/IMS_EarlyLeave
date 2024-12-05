@@ -54,7 +54,7 @@ const Dashboard = () => {
 
     const checkForNewNotifications = async () => {
         try {
-            const response = await axios.get('https://localhost:7247/GetUnreadNotifications');
+            const response = await axios.get('https://imsearlyleaveserver.azurewebsites.net/GetUnreadNotifications');
             const data = response.data;
 
             //console.log("Fetched notifications:", data); // Debug log
@@ -82,7 +82,7 @@ const Dashboard = () => {
 
             // Optionally, you can make a POST request to mark them as read in the backend
             try {
-                await axios.post('https://localhost:7247/MarkNotificationsAsRead'); // API call to mark as read
+                await axios.post('https://imsearlyleaveserver.azurewebsites.net/MarkNotificationsAsRead'); // API call to mark as read
                 checkForNewNotifications(); // Re-fetch notifications after marking as read
             } catch (error) {
                 console.error("Error marking notifications as read:", error);
@@ -111,7 +111,7 @@ const Dashboard = () => {
     // Function to fetch leave requests
     const fetchLeaveRequests = async () => {
         try {
-            const response = await axios.get('https://localhost:7247/RecentActivities'); // Update with your actual API endpoint
+            const response = await axios.get('https://imsearlyleaveserver.azurewebsites.net/RecentActivities'); // Update with your actual API endpoint
             setRequests(response.data); // Assuming the response data is an array of requests
         } catch (error) {
             console.error('Error fetching leave requests:', error);
@@ -142,7 +142,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchLeaveCounts = async () => {
             try {
-                const response = await axios.get('https://localhost:7247/CurrentMonthLeaveCounts');
+                const response = await axios.get('https://imsearlyleaveserver.azurewebsites.net/CurrentMonthLeaveCounts');
                 const leaveData = response.data;
 
                 // Extract leave types and counts into separate arrays
@@ -196,7 +196,7 @@ const Dashboard = () => {
                 const requests = []; // Array to hold total requests
                 for (let i = 0; i < days.length; i++) {
                     try {
-                        const response = await axios.get(`https://localhost:7247/TotalLeaveCount?date=${days[i]}`);
+                        const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/TotalLeaveCount?date=${days[i]}`);
                         // Assuming the response structure is { date: '2024-10-15', totalRequests: 0 }
                         requests.push(response.data.totalRequests); // Push only the totalRequests value
                         console.log(`Total requests for ${days[i]}:`, response.data.totalRequests);
@@ -243,7 +243,7 @@ const Dashboard = () => {
     const fetchDatas = async () => {
         try {
 
-            const responsePending = await axios.get('https://localhost:7247/PendingRequests');
+            const responsePending = await axios.get('https://imsearlyleaveserver.azurewebsites.net/PendingRequests');
 
             setReq(responsePending.data)// Convert response data to a 32-bit integer and set count
         } catch (error) {
@@ -255,7 +255,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchWeeklyLeaveCounts = async () => {
             try {
-                const response = await axios.get('https://localhost:7247/CurrentMonthWeeklyLeaveCounts');
+                const response = await axios.get('https://imsearlyleaveserver.azurewebsites.net/CurrentMonthWeeklyLeaveCounts');
 
                 const leaveCounts = response.data;
 
@@ -293,7 +293,7 @@ const Dashboard = () => {
 
         const fetchData = async () => {
             try {
-                const response = await axios.get(`https://localhost:7247/leaveCount?trainee_id=${username}`);
+                const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/leaveCount?trainee_id=${username}`);
                 
                 setCount(response.data);
                 

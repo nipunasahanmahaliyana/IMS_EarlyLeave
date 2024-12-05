@@ -47,7 +47,7 @@ const Requests = () => {
     useEffect(() => {
         const fetchRequests = async () => {
             try {
-                const response = await axios.get(`https://localhost:7247/ReqById?Trainee_ID=${username}`);
+                const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/ReqById?Trainee_ID=${username}`);
                 setRequests(response.data);
             } catch (error) {
                 console.error('Error fetching requests:', error);

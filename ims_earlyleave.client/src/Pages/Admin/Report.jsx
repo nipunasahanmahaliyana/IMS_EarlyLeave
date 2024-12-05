@@ -30,7 +30,7 @@ const MonthlyReport = () => {
     const getLeaveData = async (term) => {
         try {
             setLoading(true);
-            const response = await axios.get(`https://localhost:7247/Leaves?trainee_id=${term}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/Leaves?trainee_id=${term}`);
             if (response.status === 200) {
                 console.log('Leave data retrieved successfully:', response.data);
                 setLeaves(response.data);
@@ -48,7 +48,7 @@ const MonthlyReport = () => {
        
         try {
             setLoading(true);
-            const response = await axios.get(`https://localhost:7247/ApprovedRequests?trainee_id=${term}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/ApprovedRequests?trainee_id=${term}`);
             if (response.status === 200) {
                 console.log('History data retrieved successfully:', response.data);
                 setHistoryLeaves(response.data);
@@ -77,7 +77,7 @@ const MonthlyReport = () => {
     const handleDownload = async () => {
         try {
             console.log(historyLeaves);
-            const response = await axios.post('https://localhost:7247/ExcelSheet', historyLeaves, {
+            const response = await axios.post('https://imsearlyleaveserver.azurewebsites.net/ExcelSheet', historyLeaves, {
                 headers: {
                     'Content-Type': 'application/json' // Set the content type to application/json
                 },

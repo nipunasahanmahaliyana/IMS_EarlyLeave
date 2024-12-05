@@ -53,7 +53,7 @@ function LeaveRequests() {
     
         const fetchRequets = async () => {
             try {
-                const response = await axios.get("https://localhost:7247/PendingRequests");
+                const response = await axios.get("https://imsearlyleaveserver.azurewebsites.net/PendingRequests");
                 setRequests(response.data);
             } catch (error) {
                 console.print("");
@@ -79,7 +79,7 @@ function LeaveRequests() {
             }
 
             try {
-                const response = await axios.post(`https://localhost:7247/SaveNotification?description=${description}&trainee_id=${traineeId}`);
+                const response = await axios.post(`https://imsearlyleaveserver.azurewebsites.net/SaveNotification?description=${description}&trainee_id=${traineeId}`);
 
 
                 // Check if the response indicates success
@@ -123,7 +123,7 @@ function LeaveRequests() {
                     // Assuming `id` is defined and holds the request ID
                     console.log(id);
 
-                    axios.put(`https://localhost:7247/SupervisorApproval?id=${id}`)
+                    axios.put(`https://imsearlyleaveserver.azurewebsites.net/SupervisorApproval?id=${id}`)
                         .then(response => {
                             // Handle success
                             console.log("Success:", response.data);
@@ -150,7 +150,7 @@ function LeaveRequests() {
                             const desc = (`Your ${leave_type} leave request for ${dateOnly} | ${time} was `);
                             
                             try {
-                                const response = axios.post(`https://localhost:7247/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status=${1}`);
+                                const response = axios.post(`https://imsearlyleaveserver.azurewebsites.net/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status=${1}`);
                                 console.log('Leave request added successfully:', response.data);
                             } catch (error) {
                                 console.error('Error adding leave request:', error.response ? error.response.data : error.message);
@@ -196,7 +196,7 @@ function LeaveRequests() {
                     // Assuming `id` is defined and holds the request ID
                     console.log(id);
 
-                    axios.put(`https://localhost:7247/SupervisorDecline?id=${id}`)
+                    axios.put(`https://imsearlyleaveserver.azurewebsites.net/SupervisorDecline?id=${id}`)
                         .then(response => {
                             // Handle success
                             console.log("Success:", response.data);
@@ -225,7 +225,7 @@ function LeaveRequests() {
                             const desc = (`Your ${leave_type} leave request for ${dateOnly} | ${time} was `);
 
                             try {
-                                const response = axios.post(`https://localhost:7247/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status=${2}`);
+                                const response = axios.post(`https://imsearlyleaveserver.azurewebsites.net/AddRecentActivity?trainee_id=${trainee_id}&description=${desc}&status=${2}`);
                                 console.log('Leave request added successfully:', response.data);
                             } catch (error) {
                                 console.error('Error adding leave request:', error.response ? error.response.data : error.message);

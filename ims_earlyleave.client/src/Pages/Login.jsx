@@ -15,7 +15,7 @@ function Login() {
     const handleSubmit = (event) => {
         event.preventDefault();
 
-        axios.get(`https://localhost:7247/Login?username=${username}&password=${password}`)
+        axios.get(`https://imsearlyleaveserver.azurewebsites.net/Login?username=${username}&password=${password}`)
             .then(response => {
                 // Check if the response indicates a successful login
                 if ( response.data) {
@@ -38,7 +38,7 @@ function Login() {
     const handleAdminSubmit = (event) => {
         event.preventDefault();
 
-        axios.get(`https://localhost:7247/Adminlogin?username=${username}&password=${password}`)
+        axios.get(`https://imsearlyleaveserver.azurewebsites.net/Adminlogin?username=${username}&password=${password}`)
             .then(response => {
                 // Check if the response indicates a successful login
                 if (response.status === 200 && response.data) {

@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import Notifications from './Notifications';
 
+const trainee_id = sessionStorage.getItem('Trainee ID') || "Guest"; // Fallback for missing username
+
 function PDFDownload() {
     const [isOpen, setIsOpen] = useState(false);
     const [requests, setRequests] = useState([]);
@@ -12,7 +14,7 @@ function PDFDownload() {
     const fetchApprovedRequests = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`https://localhost:7247/ApprovedRequests?trainee_id=19791`); // Replace '1' with dynamic trainee_id
+            const response = await fetch(`https://imsearlyleaveserver.azurewebsites.net/ApprovedRequests?trainee_id=${trainee_id}`); // Replace '1' with dynamic trainee_id
             const data = await response.json();
             setRequests(data); // Set the fetched requests in state
         } catch (err) {
@@ -27,7 +29,7 @@ function PDFDownload() {
         try {
             setLoading(true);
 
-            const response = await fetch(`https://localhost:7247/GenerateLeaveRequestPDF?id=${id}`);
+            const response = await fetch(`https://imsearlyleaveserver.azurewebsites.net/GenerateLeaveRequestPDF?id=${id}`);
 
             // Handle errors
             if (!response.ok) {

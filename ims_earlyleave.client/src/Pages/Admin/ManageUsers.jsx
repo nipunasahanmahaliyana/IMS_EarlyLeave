@@ -53,7 +53,7 @@ const ManageUsers = () => {
         setSupervisorId(service_id);
         try {
             setLoading(true);
-            const response = await axios.get(`https://localhost:7247/AssigendSupervisorforTrainees?supervisor_id=${service_id}`);
+            const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/AssigendSupervisorforTrainees?supervisor_id=${service_id}`);
 
             if (response.status === 200) {
                 console.log('Leave data retrieved successfully:', response.data);
@@ -107,7 +107,7 @@ const ManageUsers = () => {
             });
             console.log(image);
             // Send Axios request
-            const response = await axios.post('https://localhost:7247/AddUsers', formData, formData1, {
+            const response = await axios.post('https://imsearlyleaveserver.azurewebsites.net/AddUsers', formData, formData1, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

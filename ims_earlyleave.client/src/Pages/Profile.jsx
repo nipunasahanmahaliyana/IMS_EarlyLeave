@@ -71,7 +71,7 @@ function Profile() {
         formData.append('image', image);
 
         try {
-            await axios.put(`https://localhost:7247/updateUser?trainee_ID=${trainee_id}`, formData, {
+            await axios.put(`https://imsearlyleaveserver.azurewebsites.net/updateUser?trainee_ID=${trainee_id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -96,7 +96,7 @@ function Profile() {
             try {
          
                 // Fetch user profile data
-                const response = await axios.get(`https://localhost:7247/UserById?trainee_id=${trainee_id}`);
+                const response = await axios.get(`https://imsearlyleaveserver.azurewebsites.net/UserById?trainee_id=${trainee_id}`);
                 const { username, password, trainee_ID, trainee_Name, nic, leave_Count, image } = response.data;
 
                 // Set the form fields

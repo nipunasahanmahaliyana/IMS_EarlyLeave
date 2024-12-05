@@ -1432,7 +1432,7 @@ namespace IMS_EarlyLeave.Server.Controllers
         [Route("/Login")]
         public IActionResult Login(string username, string password)
         {
-            string query = "SELECT Username,Trainee_ID FROM Users WHERE Username = @Username and Password = @Password";
+            string query = "SELECT Username,Trainee_ID FROM [dbo].[Users] WHERE Username = @Username and Password = @Password";
             int trainee_ID = 0;
             string name = "";
             try
